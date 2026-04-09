@@ -155,11 +155,41 @@ input, select{background:var(--surface2);border:1px solid var(--border);border-r
   <div class="panel" id="panel-reports">
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <div class="section-header" style="margin-bottom:0; font-weight:600;"><span class="section-title">Extract Daily Report</span></div>
-          <button class="btn-small" onclick="printDailyReport()" style="background:var(--blue-mid); color:white; border:none; padding:8px 12px;">🖨️ Print / Save PDF</button>
+          <div class="section-header" style="margin-bottom:0; font-weight:600;"><span class="section-title">Advanced Master Report</span></div>
+          <button class="btn-small" onclick="printMasterReport()" style="background:var(--blue-mid); color:white; border:none; padding:8px 12px;">🖨️ Print / Save PDF</button>
       </div>
-      <input type="date" id="report-date-picker" onchange="renderReports()" style="margin:10px 0; width:100%">
-      <div id="report-content" style="margin-top:15px"></div>
+      
+      <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+          <div>
+              <label style="font-size:11px; color:var(--text-2); font-weight:600;">START DATE</label>
+              <input type="date" id="rep-start" onchange="renderReports()" style="padding:8px;">
+          </div>
+          <div>
+              <label style="font-size:11px; color:var(--text-2); font-weight:600;">END DATE</label>
+              <input type="date" id="rep-end" onchange="renderReports()" style="padding:8px;">
+          </div>
+          <div>
+              <label style="font-size:11px; color:var(--text-2); font-weight:600;">CENTER</label>
+              <select id="rep-center" onchange="renderReports()" style="padding:8px;">
+                  <option value="all">All Centers</option>
+                  <option value="Enid Bennett">Enid Bennett</option>
+                  <option value="100658">NLT (100658)</option>
+                  <option value="100427">JP (100427)</option>
+              </select>
+          </div>
+          <div>
+              <label style="font-size:11px; color:var(--text-2); font-weight:600;">SUBJECT</label>
+              <input type="text" id="rep-subj" placeholder="Type to filter..." onkeyup="renderReports()" style="padding:8px;">
+          </div>
+          <div style="grid-column: span 2;">
+              <label style="font-size:11px; color:var(--text-2); font-weight:600;">INVIGILATOR</label>
+              <select id="rep-invig" onchange="renderReports()" style="padding:8px;">
+                  <option value="all">All Staff</option>
+              </select>
+          </div>
+      </div>
+
+      <div id="report-content" style="margin-top:20px; border-top:1px solid var(--border); padding-top:15px;"></div>
     </div>
   </div>
 
@@ -359,6 +389,7 @@ script2.onload = () => {
             if(document.getElementById('panel-dashboard').classList.contains('active')) renderDashboard();
             if(document.getElementById('panel-schedule').classList.contains('active')) renderAllExams();
             if(document.getElementById('panel-staff').classList.contains('active')) renderStaff();
+            if(document.getElementById('panel-reports').classList.contains('active')) { populateReportFilters(); renderReports(); }
         }
     });
 
@@ -367,6 +398,7 @@ script2.onload = () => {
         if (val) {
             localStorage.setItem(STK, JSON.stringify(val));
             if(document.getElementById('panel-staff').classList.contains('active')) renderStaff();
+            if(document.getElementById('panel-reports').classList.contains('active')) populateReportFilters();
         }
     });
 
@@ -375,7 +407,6 @@ script2.onload = () => {
 };
 
 // 4. THE NEW LOAD/SAVE FUNCTIONS (Hybrid Local + Cloud)
-// We keep the old names so the rest of your app doesn't break.
 
 function loadData() { 
     let d = JSON.parse(localStorage.getItem(SK)); 
@@ -610,8 +641,6 @@ function renderStaff() {
 function addStaff(){ const n=document.getElementById('new-staff-name').value.trim(); if(n){const s=loadStaff(); if(!s.includes(n)) s.push(n); saveStaff(s); renderStaff(); document.getElementById('new-staff-name').value='';}}
 function removeStaff(n){ const s=loadStaff().filter(x=>x!==n); saveStaff(s); renderStaff(); }
 
-// ---------------- NEW PRINT FUNCTIONS ---------------- //
-
 function printStaffSchedule(staffName) {
     const d = loadData();
     const myExams = d.exams.filter(e => e.assigned?.includes(staffName)).sort((a,b) => a.date.localeCompare(b.date));
@@ -652,20 +681,31 @@ function printStaffSchedule(staffName) {
     printWin.document.close();
 }
 
-function printDailyReport() {
-    const dt = document.getElementById('report-date-picker').value; 
-    if(!dt) return showToast("Select a date first.");
-    
-    const content = document.getElementById('report-content').innerHTML;
-    if(content.includes('No sessions recorded')) return showToast("There is nothing to print for this date.");
+// --- NEW REPORTING ENGINE START --- //
 
-    let html = `<html><head><title>Official Daily Report - ${dt}</title>
+function populateReportFilters() {
+    const staff = loadStaff();
+    const select = document.getElementById('rep-invig');
+    if(!select) return;
+    let html = '<option value="all">All Staff</option>';
+    staff.forEach(s => html += `<option value="${s}">${s}</option>`);
+    select.innerHTML = html;
+}
+
+function printMasterReport() {
+    const content = document.getElementById('report-content').innerHTML;
+    if(!content || content.includes('No sessions match')) return showToast("There is nothing to print.");
+
+    let html = `<html><head><title>Official Logistics Master Report</title>
     <style>
         body { font-family: sans-serif; padding: 30px; color: #000; max-width: 800px; margin: 0 auto; line-height: 1.5; }
         .report-section { border-left: 4px solid #3b82f6; padding-left: 15px; margin-bottom: 20px; margin-top: 15px; }
         .remarks-box { background: #f4f4f4; padding: 12px; border-radius: 8px; font-style: italic; font-size: 13px; margin-top: 8px; border: 1px dashed #ccc; }
         h2 { margin-bottom: 5px; }
+        .date-header { background: #eee; padding: 10px; font-weight: bold; margin-top: 30px; font-size: 16px; border-bottom: 2px solid #000; }
     </style></head><body>
+    <h2>Official Logistics Master Report</h2>
+    <p style="font-size:13px; color:#555; border-bottom:1px solid #ccc; padding-bottom:15px;">Generated on: ${fmtDate(todayStr())}</p>
     ${content}
     <div style="margin-top:40px; border-top:1px solid #ccc; padding-top:20px;">
         <p><b>Supervisor Signature:</b> ___________________________ &nbsp;&nbsp;&nbsp; <b>Date:</b> _________________</p>
@@ -678,114 +718,141 @@ function printDailyReport() {
     printWin.document.close();
 }
 
-// ----------------------------------------------------- //
-
 function renderReports() {
-    const dt = document.getElementById('report-date-picker').value; 
-    if(!dt) return;
-    
-    const day = loadData().exams.filter(e => e.date === dt);
-    let html = `<div style="margin-bottom:20px; font-size:16px; font-weight:600">Official Logistics Report for ${fmtDate(dt)}</div>`;
-    
-    if(day.length === 0) {
-        document.getElementById('report-content').innerHTML = "<p style='text-align:center; padding:20px'>No sessions recorded for this date.</p>";
+    const start = document.getElementById('rep-start').value;
+    const end = document.getElementById('rep-end').value;
+    const center = document.getElementById('rep-center').value;
+    const subj = document.getElementById('rep-subj').value.toLowerCase();
+    const invig = document.getElementById('rep-invig').value;
+
+    let filtered = loadData().exams;
+
+    // 1. APPLY ALL ACTIVE FILTERS
+    if (start) filtered = filtered.filter(e => e.date >= start);
+    if (end) filtered = filtered.filter(e => e.date <= end);
+    if (center !== 'all') filtered = filtered.filter(e => e.center === center);
+    if (subj) filtered = filtered.filter(e => e.subject.toLowerCase().includes(subj));
+    if (invig !== 'all') filtered = filtered.filter(e => e.assigned && e.assigned.includes(invig));
+
+    let html = ``;
+
+    if (filtered.length === 0) {
+        document.getElementById('report-content').innerHTML = "<p style='text-align:center; padding:20px; color:var(--text-3)'>No sessions match your search criteria.</p>";
         return;
     }
 
-    const groupedSessions = {};
-    day.forEach(e => {
-        if (!groupedSessions[e.time]) {
-            groupedSessions[e.time] = { rooms: {}, totalCands: 0 };
-        }
+    // Sort chronologically before grouping
+    filtered.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+
+    // 2. GROUP BY DATE -> THEN BY TIME -> THEN APPLY POOLING RULES
+    const groupedByDate = {};
+    filtered.forEach(e => {
+        if (!groupedByDate[e.date]) groupedByDate[e.date] = { times: {}, totalCands: 0 };
+        if (!groupedByDate[e.date].times[e.time]) groupedByDate[e.date].times[e.time] = { rooms: {} };
         
         const searchString = e.subject + ' ' + (e.notes||'') + ' ' + (e.room||'');
-        let roomKey;
-        let isAux = false;
-        
-        if (AUX_REGEX.test(searchString)) {
-            roomKey = "Auxiliary: " + ((e.room && e.room !== "TBD") ? e.room : e.subject);
-            isAux = true;
-        } else {
-            roomKey = "Main Hall Pool"; 
-        }
+        let roomKey = AUX_REGEX.test(searchString) ? "Auxiliary: " + ((e.room && e.room !== "TBD") ? e.room : e.subject) : "Main Hall Pool";
+        let isAux = AUX_REGEX.test(searchString);
 
-        if (!groupedSessions[e.time].rooms[roomKey]) {
-            groupedSessions[e.time].rooms[roomKey] = { cands: 0, manualMax: 0, subjects: [], isAux: isAux, centers: new Set(), staffNames: new Set() };
+        if (!groupedByDate[e.date].times[e.time].rooms[roomKey]) {
+            groupedByDate[e.date].times[e.time].rooms[roomKey] = { cands: 0, manualMax: 0, subjects: [], isAux: isAux, centers: new Set(), staffNames: new Set() };
         }
         
         const candCount = e.candidates + (e.ext_nlt||0) + (e.ext_jp||0);
-        groupedSessions[e.time].rooms[roomKey].cands += candCount;
-        groupedSessions[e.time].totalCands += candCount;
-        groupedSessions[e.time].rooms[roomKey].subjects.push(e.subject);
-        groupedSessions[e.time].rooms[roomKey].centers.add(e.center);
+        groupedByDate[e.date].times[e.time].rooms[roomKey].cands += candCount;
+        groupedByDate[e.date].totalCands += candCount;
+        groupedByDate[e.date].times[e.time].rooms[roomKey].subjects.push(e.subject);
+        groupedByDate[e.date].times[e.time].rooms[roomKey].centers.add(e.center);
         
-        if (e.assigned) e.assigned.forEach(name => groupedSessions[e.time].rooms[roomKey].staffNames.add(name));
-
-        if (e.manual_staff > groupedSessions[e.time].rooms[roomKey].manualMax) {
-            groupedSessions[e.time].rooms[roomKey].manualMax = e.manual_staff;
+        if (e.assigned) e.assigned.forEach(name => groupedByDate[e.date].times[e.time].rooms[roomKey].staffNames.add(name));
+        if (e.manual_staff > groupedByDate[e.date].times[e.time].rooms[roomKey].manualMax) {
+            groupedByDate[e.date].times[e.time].rooms[roomKey].manualMax = e.manual_staff;
         }
     });
 
-    for (const time in groupedSessions) {
-        let sessionStaffNeeded = 0;
-        
-        for (const room in groupedSessions[time].rooms) {
-            const data = groupedSessions[time].rooms[room];
-            const autoInv = Math.max(1, Math.ceil(data.cands / 30));
-            sessionStaffNeeded += Math.max(autoInv, data.manualMax);
-        }
-
-        const additionalTeachers = Math.max(0, sessionStaffNeeded - 1);
-
-        html += `<div style="margin-top:25px; padding-bottom:10px; border-bottom:2px solid var(--border); font-size:15px;">
-                    <b>${time} Session Summary</b><br>
-                    <span style="font-size:13px; color:var(--text-2)">
-                        Total Candidates: ${groupedSessions[time].totalCands} | 
-                        Staff Required: <b>${sessionStaffNeeded}</b> 
-                        <span style="color:var(--green)">(1 Lead Assistant)</span> 
-                        ${additionalTeachers > 0 ? `<span style="color:var(--amber)">+ (${additionalTeachers} Additional Teacher${additionalTeachers > 1 ? 's' : ''})</span>` : ''}
-                    </span>
+    // 3. BUILD THE MULTI-DAY UI
+    for (const date in groupedByDate) {
+        html += `<div class="date-header" style="background:var(--surface2); padding:10px 15px; border-radius:6px; font-weight:700; margin-top:25px; color:var(--text); font-size:16px;">
+                    📅 ${fmtDate(date)} 
+                    <span style="float:right; font-size:13px; font-weight:normal;">Day Total: ${groupedByDate[date].totalCands} Cands</span>
                  </div>`;
 
-        for (const room in groupedSessions[time].rooms) {
-            const data = groupedSessions[time].rooms[room];
-            const autoInv = Math.max(1, Math.ceil(data.cands / 30));
-            const finalStaff = Math.max(autoInv, data.manualMax);
+        for (const time in groupedByDate[date].times) {
+            let sessionStaffNeeded = 0;
             
-            let rem = "";
-            if (data.manualMax > autoInv) {
-                rem += `${finalStaff} staff member(s) required (Manual Override). `;
-            } else {
-                rem += `${finalStaff} staff member(s) required. `;
-                if (data.cands > 30) rem += `Extra teacher engaged to satisfy 1:30 over-capacity ratio. `;
+            for (const room in groupedByDate[date].times[time].rooms) {
+                const data = groupedByDate[date].times[time].rooms[room];
+                const autoInv = Math.max(1, Math.ceil(data.cands / 30));
+                sessionStaffNeeded += Math.max(autoInv, data.manualMax);
             }
-            if (data.isAux) rem += `Auxiliary technical/specialized room setup verified. `;
 
-            const subjList = data.subjects.join(", ");
-            
-            const assignedArr = Array.from(data.staffNames);
-            const staffDisplay = assignedArr.length > 0 ? assignedArr.join(", ") : "<span style='color:var(--text-3); font-style:italic'>None explicitly assigned</span>";
+            const additionalTeachers = Math.max(0, sessionStaffNeeded - 1);
 
-            html += `<div class="report-section" style="margin-top:15px;">
-                <b>${room.replace('Auxiliary: ', '')} ${data.isAux ? '<span style="color:var(--amber);font-size:11px">[AUX]</span>' : ''}</b><br>
-                <small>${data.cands} Total Candidates | Subjects: ${subjList}</small><br>
-                <div style="margin: 6px 0; font-size: 12px; color: var(--blue-mid);">👥 <b>Assigned:</b> ${staffDisplay}</div>
-                <div class="remarks-box"><b>Claim Remarks:</b> ${rem}</div>
-            </div>`;
+            html += `<div style="margin-top:15px; padding-bottom:10px; border-bottom:2px solid var(--border); font-size:15px;">
+                        <b>${time} Session</b><br>
+                        <span style="font-size:13px; color:var(--text-2)">
+                            Staff Required: <b>${sessionStaffNeeded}</b> 
+                            <span style="color:var(--green)">(1 Lead Assistant)</span> 
+                            ${additionalTeachers > 0 ? `<span style="color:var(--amber)">+ (${additionalTeachers} Additional Teacher${additionalTeachers > 1 ? 's' : ''})</span>` : ''}
+                        </span>
+                     </div>`;
+
+            for (const room in groupedByDate[date].times[time].rooms) {
+                const data = groupedByDate[date].times[time].rooms[room];
+                const autoInv = Math.max(1, Math.ceil(data.cands / 30));
+                const finalStaff = Math.max(autoInv, data.manualMax);
+                
+                let rem = "";
+                if (data.manualMax > autoInv) {
+                    rem += `${finalStaff} staff member(s) required (Manual Override). `;
+                } else {
+                    rem += `${finalStaff} staff member(s) required. `;
+                    if (data.cands > 30) rem += `Extra teacher engaged to satisfy 1:30 over-capacity ratio. `;
+                }
+                if (data.isAux) rem += `Auxiliary technical/specialized room setup verified. `;
+
+                const subjList = data.subjects.join(", ");
+                const assignedArr = Array.from(data.staffNames);
+                const staffDisplay = assignedArr.length > 0 ? assignedArr.join(", ") : "<span style='color:var(--text-3); font-style:italic'>None explicitly assigned</span>";
+
+                html += `<div class="report-section" style="margin-top:15px;">
+                    <b>${room.replace('Auxiliary: ', '')} ${data.isAux ? '<span style="color:var(--amber);font-size:11px">[AUX]</span>' : ''}</b><br>
+                    <small>${data.cands} Total Candidates | Subjects: ${subjList}</small><br>
+                    <div style="margin: 6px 0; font-size: 12px; color: var(--blue-mid);">👥 <b>Assigned:</b> ${staffDisplay}</div>
+                    <div class="remarks-box"><b>Claim Remarks:</b> ${rem}</div>
+                </div>`;
+            }
         }
     }
-    
     document.getElementById('report-content').innerHTML = html;
 }
+// --- NEW REPORTING ENGINE END --- //
 
-function showPanel(n){ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(b=>b.classList.remove('active')); document.getElementById('panel-'+n).classList.add('active'); const bn=document.getElementById('bnav-'+n); if(bn) bn.classList.add('active'); if(n=='dashboard') renderDashboard(); if(n=='schedule') renderAllExams(); if(n=='staff') renderStaff(); }
+function showPanel(n){ 
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); 
+    document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(b=>b.classList.remove('active')); 
+    document.getElementById('panel-'+n).classList.add('active'); 
+    const bn=document.getElementById('bnav-'+n); 
+    if(bn) bn.classList.add('active'); 
+    
+    if(n=='dashboard') renderDashboard(); 
+    if(n=='schedule') renderAllExams(); 
+    if(n=='staff') renderStaff(); 
+    if(n=='reports') { populateReportFilters(); renderReports(); } // Updates dropdowns and generates report
+}
+
 function toggleTheme(){ document.documentElement.hasAttribute('data-theme')?document.documentElement.removeAttribute('data-theme'):document.documentElement.setAttribute('data-theme','dark'); renderDashboard(); }
 function todayStr(){ return new Date().toISOString().split('T')[0]; }
 function fmtDate(ds){ const d=new Date(ds+'T12:00:00'); return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
 function subjColor(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))&0xffff;return COLS[h%COLS.length]}
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
 
-(function(){ const th = localStorage.getItem('examhub_theme') || 'dark'; if(th==='dark') document.documentElement.setAttribute('data-theme','dark'); document.getElementById('report-date-picker').value = todayStr(); renderDashboard(); renderStaff(); })();
+(function(){ 
+    const th = localStorage.getItem('examhub_theme') || 'dark'; 
+    if(th==='dark') document.documentElement.setAttribute('data-theme','dark'); 
+    renderDashboard(); 
+    renderStaff(); 
+})();
 
 </script>
 </body>
