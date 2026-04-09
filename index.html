@@ -160,8 +160,9 @@ input, select{background:var(--surface2);border:1px solid var(--border);border-r
 
   <div class="panel" id="panel-recruitment">
     <div class="card">
-      <div class="section-header" style="margin-bottom:10px; font-weight:600;">
-          <span class="section-title">🚨 Recruitment Radar</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div class="section-header" style="margin-bottom:0; font-weight:600;"><span class="section-title">🚨 Recruitment Radar</span></div>
+          <button class="btn-small" onclick="printRecruitmentReport()" style="background:var(--blue-mid); color:white; border:none; padding:8px 12px;">🖨️ Print / Save PDF</button>
       </div>
       <p style="font-size:12px; color:var(--text-2); margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
           Select a date range to find sessions requiring extra invigilators.
@@ -770,7 +771,50 @@ function printMasterReport() {
     printWin.document.write(html);
     printWin.document.close();
 }
+function printRecruitmentReport() {
+    const content = document.getElementById('recruitment-list').innerHTML;
+    const startInput = document.getElementById('recruit-start').value;
+    const endInput = document.getElementById('recruit-end').value;
+    
+    // Don't print if it's empty or fully staffed
+    if(!content || content.includes('fully staffed')) return showToast("There is no recruitment needed to print.");
 
+    // Format dates for the report header
+    const startDateForm = startInput ? fmtDate(startInput) : fmtDate(todayStr());
+    const endDateForm = endInput ? fmtDate(endInput) : "End of Schedule";
+
+    // Convert CSS variables to standard colors so it prints beautifully regardless of dark mode
+    let printSafeContent = content
+        .replace(/var\(--border\)/g, '#ccc')
+        .replace(/var\(--surface2\)/g, '#f9f9f9')
+        .replace(/var\(--text\)/g, '#000')
+        .replace(/var\(--amber\)/g, '#d97706')
+        .replace(/var\(--blue-mid\)/g, '#2563eb');
+
+    let html = `<html><head><title>Recruitment Needs Report</title>
+    <style>
+        body { font-family: sans-serif; padding: 30px; color: #000; max-width: 800px; margin: 0 auto; line-height: 1.5; }
+        h2 { margin-bottom: 5px; }
+    </style></head><body>
+    <h2>Action Required: Staffing Shortages</h2>
+    <p style="font-size:13px; color:#555; border-bottom:1px solid #ccc; padding-bottom:15px;">
+        <b>Period:</b> ${startDateForm} to ${endDateForm}<br>
+        <b>Generated on:</b> ${fmtDate(todayStr())}
+    </p>
+    <div style="margin-top: 20px;">
+        ${printSafeContent}
+    </div>
+    <div style="margin-top:40px; border-top:1px solid #ccc; padding-top:20px; font-size:12px; color:#666;">
+        Generated via Exam Admin Hub PRO
+    </div>
+    <script>window.onload = function() { window.print(); }<\/script>
+    </body></html>`;
+
+    const printWin = window.open('', '_blank');
+    printWin.document.write(html);
+    printWin.document.close();
+}
+  
 function renderReports() {
     const start = document.getElementById('rep-start').value;
     const end = document.getElementById('rep-end').value;
