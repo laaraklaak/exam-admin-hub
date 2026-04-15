@@ -343,8 +343,7 @@ input::placeholder{color:var(--text-3)}
   </button>
 </nav>
 
-<div class="toast" id="toast"></div>
-<script>
+<div class="toast" id="toast"></div><script>
 // ═══════════════════════════════════════════════════════
 //  CONSTANTS & COLOUR PALETTE
 // ═══════════════════════════════════════════════════════
@@ -431,22 +430,15 @@ function updateSyncBadge(state) {
 //  CALCULATIONS & TIME SORTING ENGINE
 // ═══════════════════════════════════════════════════════
 const getStaffNeeded = n => Math.max(1, Math.ceil(n / 30));
-
-// KEY FIX: Forces Morning to be weighted as 1, Afternoon as 2. Defeats alphabetical sort.
 const timeWeight = t => (t && t.includes('Morning')) ? 1 : 2;
 
 function getDailyStaff(examsArr) {
   const timeSlots = {};
   examsArr.forEach(e => {
     if (!timeSlots[e.time]) timeSlots[e.time] = {};
-    
-    // Group purely by SUBJECT
     const key = e.subject.trim().toUpperCase(); 
-    
     if (!timeSlots[e.time][key]) timeSlots[e.time][key] = { cands:0, manualMax:0 };
-    
     timeSlots[e.time][key].cands += e.candidates + (e.ext_nlt||0) + (e.ext_jp||0);
-    
     if ((e.manual_staff||0) > timeSlots[e.time][key].manualMax) {
         timeSlots[e.time][key].manualMax = e.manual_staff;
     }
@@ -550,8 +542,6 @@ function renderDashboard() {
   } else {
     up = d.exams.filter(e => e.date >= t);
   }
-  
-  // KEY FIX: Sort chronologically using TimeWeight
   up.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
 
   const nextDayExams = up.filter(e => e.date === up[0]?.date);
@@ -620,32 +610,69 @@ function renderDashboard() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  GATE MODAL
+//  GATE MODAL (FIXED: SPLIT BY AM/PM)
 // ═══════════════════════════════════════════════════════
 function openGate(date) {
-  const day   = loadData().exams.filter(e => e.date === date);
-  const cands = day.reduce((s,e) => s + e.candidates + (e.ext_nlt||0) + (e.ext_jp||0), 0);
-  const staff = getDailyStaff(day);
+  const day = loadData().exams.filter(e => e.date === date);
+  
+  // 1. Separate exams by time
+  const amExams = day.filter(e => e.time.includes('Morning'));
+  const pmExams = day.filter(e => e.time.includes('Afternoon'));
 
-  // Subjects running during this day
-  const uniqueSubjects = new Set(day.map(e => e.subject.trim().toUpperCase())).size;
+  // 2. Helper to calculate stats for a specific session block
+  const calcStats = (examsArr) => {
+    if (!examsArr.length) return null;
+    const cands = examsArr.reduce((s,e) => s + e.candidates + (e.ext_nlt||0) + (e.ext_jp||0), 0);
+    const staff = getDailyStaff(examsArr);
+    const uniqueSubjects = new Set(examsArr.map(e => e.subject.trim().toUpperCase())).size;
+    const rooms = new Set(examsArr.map(e => {
+        const roomType = AUX_REGEX.test(e.subject+' '+(e.notes||'')+' '+(e.room||''))
+          ? 'Aux: '+((e.room && e.room!=='TBD') ? e.room : e.subject)
+          : 'Main Hall Pool';
+        return e.center + '|' + roomType;
+    })).size;
+    return { cands, staff, uniqueSubjects, rooms };
+  };
 
+  const amStats = calcStats(amExams);
+  const pmStats = calcStats(pmExams);
+
+  let html = '';
+  
+  // 3. UI Builder for the splits
+  const buildSection = (title, stats, color) => {
+    if (!stats) return `<div style="padding:10px 0; color:var(--text-3); font-style:italic; text-align:center; font-size:12px">No ${title} Exams Scheduled</div>`;
+    const extra = Math.max(0, stats.staff - 1);
+    return `
+      <div style="margin-bottom:12px">
+        <div style="font-weight:700; color:var(--${color}); margin-bottom:8px; font-size:13px; text-transform:uppercase; letter-spacing:0.5px">${title} SESSION</div>
+        <div class="modal-stat-row" style="padding:4px 0"><span>Candidates Hosted</span><b>${stats.cands}</b></div>
+        <div class="modal-stat-row" style="padding:4px 0"><span>Invigilators Required</span><b>${stats.staff}</b></div>
+        ${extra > 0 ? `<div class="modal-stat-row" style="color:var(--amber); border:none; padding:0; margin-top:-10px; font-size:12px"><span>↳ Extra Teachers Needed</span><b>+${extra}</b></div>` : ''}
+        <div class="modal-stat-row" style="padding:4px 0; border:none"><span>Distinct Spaces / Subjects</span><b>${stats.rooms} / ${stats.uniqueSubjects}</b></div>
+      </div>
+    `;
+  };
+
+  html += buildSection('Morning', amStats, 'blue-mid');
+  html += `<div style="border-top:1px dashed var(--border); margin:12px 0"></div>`;
+  html += buildSection('Afternoon', pmStats, 'purple-mid');
+
+  // 4. Daily Center Load
   const eb  = day.filter(e=>e.center==='Enid Bennett').reduce((s,e)=>s+e.candidates,0);
   const nlt = day.filter(e=>e.center==='100658').reduce((s,e)=>s+e.candidates,0)  + day.reduce((s,e)=>s+(e.ext_nlt||0),0);
   const jp  = day.filter(e=>e.center==='100427').reduce((s,e)=>s+e.candidates,0)  + day.reduce((s,e)=>s+(e.ext_jp||0),0);
 
-  document.getElementById('modal-date-title').textContent = '📅 ' + fmtDate(date);
-  document.getElementById('modal-stats-content').innerHTML = `
-    <div class="modal-stat-row"><span>Total Candidates Hosted</span><b>${cands}</b></div>
-    <div class="modal-stat-row"><span>Peak Invigilators Required</span><b>${staff}</b></div>
-    <div class="modal-stat-row" style="color:var(--green-mid)"><span>↳ Lead Assistant (base)</span><b>1</b></div>
-    <div class="modal-stat-row" style="color:var(--amber)"><span>↳ Additional Teachers Needed</span><b>${Math.max(0,staff-1)}</b></div>
-    <div class="modal-stat-row"><span>Distinct Subjects Hosted</span><b>${uniqueSubjects}</b></div>
-    <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)">
-      <div class="modal-stat-row" style="border:none;margin-bottom:4px"><span>🏫 Enid Bennett (Home)</span><b>${eb}</b></div>
-      <div class="modal-stat-row" style="border:none;margin-bottom:4px;color:var(--blue)"><span>📍 NLT — 100658</span><b>${nlt}</b></div>
-      <div class="modal-stat-row" style="border:none;color:var(--purple-mid)"><span>📍 JP — 100427</span><b>${jp}</b></div>
+  html += `
+    <div style="margin-top:16px;padding-top:12px;border-top:2px solid var(--border)">
+      <div style="font-size:11px; font-weight:700; color:var(--text-2); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Daily Physical Center Load</div>
+      <div class="modal-stat-row" style="border:none;margin-bottom:2px;padding:4px 0"><span>🏫 EB (Home)</span><b>${eb}</b></div>
+      ${nlt > 0 ? `<div class="modal-stat-row" style="border:none;margin-bottom:2px;padding:4px 0;color:var(--blue-mid)"><span>📍 NLT — 100658</span><b>${nlt}</b></div>` : ''}
+      ${jp > 0 ? `<div class="modal-stat-row" style="border:none;padding:4px 0;color:var(--purple-mid)"><span>📍 JP — 100427</span><b>${jp}</b></div>` : ''}
     </div>`;
+
+  document.getElementById('modal-date-title').textContent = '📅 ' + fmtDate(date);
+  document.getElementById('modal-stats-content').innerHTML = html;
   document.getElementById('gate-modal').style.display = 'flex';
 }
 
@@ -655,9 +682,7 @@ function openGate(date) {
 function renderAllExams() {
   const d    = loadData();
   const term = (document.getElementById('schedule-filter')?.value || '').toLowerCase();
-  
-  // KEY FIX: Sort chronologically using TimeWeight
-  let list = d.exams.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
+  let   list = d.exams.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
   
   if (term) list = list.filter(e =>
     e.subject.toLowerCase().includes(term) ||
@@ -857,8 +882,6 @@ function removeStaff(n) {
 
 function printStaffSchedule(staffName) {
   const d = loadData();
-  
-  // KEY FIX: Sort Printout chronologically using TimeWeight
   const myExams = d.exams.filter(e => e.assigned?.includes(staffName)).sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
   
   let html = `<html><head><title>${staffName} - Schedule</title>
@@ -905,7 +928,6 @@ function renderReports() {
 
   if (!filtered.length) { el.innerHTML = "<p class='empty-state'>No sessions match the filters.</p>"; return; }
 
-  // KEY FIX: Sort Reports chronologically using TimeWeight
   filtered.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
 
   const byDate = {};
@@ -1007,8 +1029,6 @@ function renderRecruitment() {
 
   let upcoming = d.exams.filter(e => e.date >= start);
   if (end) upcoming = upcoming.filter(e => e.date <= end);
-  
-  // KEY FIX: Sort Recruits chronologically using TimeWeight
   upcoming.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
 
   const slots = {};
@@ -1141,6 +1161,7 @@ function showToast(msg, type='info') {
 //  BASE EXAM DATA
 // ═══════════════════════════════════════════════════════
 const BASE_EXAMS = [
+  // --- ENID BENNETT (HOME) CANDIDATES ---
   // WEEK 1
   { id:101,  subject:"CAPE Food & Nut U2 P2",      room:"Food Lab",        date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
   { id:102,  subject:"CAPE Digital Media U2 P2",   room:"Computer Lab A",  date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett", notes:"Online" },
@@ -1235,9 +1256,26 @@ const BASE_EXAMS = [
   { id:611,  subject:"CAPE Entrep U1 P1",          room:"Classroom 1",     date:"2026-06-12", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
   // WEEK 7
   { id:701,  subject:"CAPE Carib Studies P1",      room:"Main Hall",       date:"2026-06-15", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
-  { id:702,  subject:"CAPE Comm Studies P1",       room:"Main Hall",       date:"2026-06-16", time:"Morning (9:00 AM)",    candidates:18, center:"Enid Bennett" }
-];
+  { id:702,  subject:"CAPE Comm Studies P1",       room:"Main Hall",       date:"2026-06-16", time:"Morning (9:00 AM)",    candidates:18, center:"Enid Bennett" },
 
+  // --- JP CENTRE (100427) CANDIDATES ---
+  { id:801, subject:"CSEC Chem Gen P3/2",          room:"Main Hall", date:"2026-05-04", time:"Morning (9:00 AM)",   candidates:2,  center:"100427" },
+  { id:802, subject:"CSEC English A Gen P2",       room:"Main Hall", date:"2026-05-05", time:"Morning (9:00 AM)",   candidates:4,  center:"100427" },
+  { id:803, subject:"CSEC Biology Gen P3/2",       room:"Main Hall", date:"2026-05-06", time:"Afternoon (1:00 PM)", candidates:4,  center:"100427" },
+  { id:804, subject:"CSEC POA Gen P2",             room:"Main Hall", date:"2026-05-07", time:"Morning (9:00 AM)",   candidates:1,  center:"100427" },
+  { id:805, subject:"CSEC Math Gen P3/2",          room:"Main Hall", date:"2026-05-07", time:"Afternoon (1:00 PM)", candidates:12, center:"100427" },
+  { id:806, subject:"CSEC HSB Gen P2",             room:"Main Hall", date:"2026-05-11", time:"Afternoon (1:00 PM)", candidates:5,  center:"100427" },
+  { id:807, subject:"CSEC Math Gen P2",            room:"Main Hall", date:"2026-05-12", time:"Morning (9:00 AM)",   candidates:12, center:"100427" },
+  { id:808, subject:"CSEC English B Gen P2",       room:"Main Hall", date:"2026-05-12", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" },
+  { id:809, subject:"CSEC Social Studies Gen P2",  room:"Main Hall", date:"2026-05-13", time:"Morning (9:00 AM)",   candidates:1,  center:"100427" },
+  { id:810, subject:"CSEC Biology Gen P2",         room:"Main Hall", date:"2026-05-14", time:"Morning (9:00 AM)",   candidates:4,  center:"100427" },
+  { id:811, subject:"CSEC IT Gen P2",              room:"Main Hall", date:"2026-05-14", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" },
+  { id:812, subject:"CSEC POB Gen P2",             room:"Main Hall", date:"2026-05-15", time:"Afternoon (1:00 PM)", candidates:5,  center:"100427" },
+  { id:813, subject:"CSEC Geography Gen P2",       room:"Main Hall", date:"2026-05-18", time:"Morning (9:00 AM)",   candidates:1,  center:"100427" },
+  { id:814, subject:"CSEC Chem Gen P2",            room:"Main Hall", date:"2026-05-19", time:"Morning (9:00 AM)",   candidates:2,  center:"100427" },
+  { id:815, subject:"CSEC Carib History P2",       room:"Main Hall", date:"2026-05-21", time:"Morning (9:00 AM)",   candidates:2,  center:"100427" },
+  { id:816, subject:"CSEC POA Gen P1 & P3/2",      room:"Main Hall", date:"2026-05-21", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" }
+];
 
 // ═══════════════════════════════════════════════════════
 //  BOOT
