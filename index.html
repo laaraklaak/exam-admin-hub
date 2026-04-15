@@ -2,1016 +2,1246 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Exam Admin Hub PRO - Enid Bennett High</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* RESTORED HIGH-FOCUS CSS */
 :root {
   --bg: #f2f0eb; --surface: #ffffff; --surface2: #ebe9e3; --border: #dddad2; --border-strong: #bbb9b0;
   --text: #181715; --text-2: #5c5a54; --text-3: #9c9a93; --radius: 14px; --radius-sm: 8px;
   --blue: #1d4ed8; --blue-bg: #dbeafe; --blue-mid: #3b82f6; --green: #15803d; --green-bg: #dcfce7; --green-mid: #22c55e;
   --amber: #fbbf24; --amber-bg: #2a1f08; --amber-border: #453008; --red: #b91c1c; --red-bg: #fee2e2; --red-mid: #ef4444;
+  --purple-mid: #8b5cf6;
 }
 [data-theme="dark"] {
   --bg: #0f0f0e; --surface: #1a1a18; --surface2: #232320; --border: #2c2c28; --border-strong: #3e3e3a;
   --text: #e8e5de; --text-2: #8a877e; --text-3: #55524c;
   --blue: #93c5fd; --blue-bg: #1e2d4a; --green: #86efac; --green-bg: #14281e;
+  --red-bg: #2d1212;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
 
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
-.topbar-brand{font-weight:600;font-size:16px;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px}
-.topbar-nav{display:flex;gap:3px}
-.nav-btn{background:none;border:none;cursor:pointer;padding:6px 13px;border-radius:var(--radius-xs);color:var(--text-2);font-size:13px;transition:0.12s}
-.nav-btn.active{background:var(--blue-bg);color:var(--blue);font-weight:600}
+/* ── TOPBAR ─────────────────────────────────────── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100;gap:8px}
+.topbar-brand{font-weight:600;font-size:15px;letter-spacing:-0.02em;white-space:nowrap}
+.topbar-nav{display:flex;gap:3px;flex-wrap:nowrap}
+.nav-btn{background:none;border:1px solid transparent;cursor:pointer;padding:5px 11px;border-radius:6px;color:var(--text-2);font-size:12px;font-family:'Outfit',sans-serif;font-weight:500;transition:.12s;white-space:nowrap}
+.nav-btn:hover{background:var(--surface2);border-color:var(--border)}
+.nav-btn.active{background:var(--blue-bg);color:var(--blue);font-weight:600;border-color:var(--blue)44}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 
-.main{max-width:800px;margin:0 auto;padding:20px 14px 100px}
+/* ── SYNC STATUS BADGE ──────────────────────────── */
+#sync-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap;transition:.3s}
+#sync-badge.synced{background:var(--green-bg);color:var(--green)}
+#sync-badge.saving{background:var(--blue-bg);color:var(--blue)}
+#sync-badge.error{background:var(--red-bg);color:var(--red-mid)}
+#sync-badge.offline{background:var(--surface2);color:var(--text-3)}
+
+/* ── MAIN LAYOUT ─────────────────────────────────── */
+.main{max-width:820px;margin:0 auto;padding:20px 14px 100px}
 .panel{display:none}.panel.active{display:block}
 
-/* STATS GRID */
+/* ── STATS ───────────────────────────────────────── */
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
 .stat-card{border-radius:var(--radius);padding:16px 18px;border:1.5px solid transparent}
 .stat-card.blue{background:var(--blue-bg);border-color:#bfdbfe}
 .stat-card.green{background:var(--green-bg);border-color:#bbf7d0}
 .stat-card.amber{background:var(--amber-bg);border-color:var(--amber-border)}
 .stat-value{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1}
-.stat-card.amber .stat-value, .stat-card.amber .stat-label {color:var(--amber)}
+.stat-label{font-size:11px;margin-top:4px;color:var(--text-2)}
+.stat-card.blue .stat-value{color:var(--blue-mid)}
+.stat-card.green .stat-value{color:var(--green-mid)}
+.stat-card.amber .stat-value,.stat-card.amber .stat-label{color:var(--amber)}
 
-/* GATE INTERFACE */
-.date-group{border-bottom:2px solid var(--border); padding-bottom:20px; margin-bottom:30px}
-.date-gate-trigger{font-size:11px; font-weight:700; text-transform:uppercase; background:var(--surface2); padding:10px 14px; border-radius:6px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; margin-bottom:12px; color:var(--text-2); border:1px solid transparent; transition:0.2s}
-.date-gate-trigger:hover{border-color:var(--blue-mid); background:var(--surface)}
-.session-separator{border-top: 1px dashed var(--border); margin: 12px 0; opacity: 0.4;}
-
-/* EXAM CARDS */
+/* ── EXAM CARDS ──────────────────────────────────── */
+.date-group{border-bottom:2px solid var(--border);padding-bottom:20px;margin-bottom:28px}
+.date-gate-trigger{font-size:11px;font-weight:700;text-transform:uppercase;background:var(--surface2);padding:10px 14px;border-radius:6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px;color:var(--text-2);border:1px solid transparent;transition:.2s}
+.date-gate-trigger:hover{border-color:var(--blue-mid);background:var(--surface)}
 .exam-list{display:flex;flex-direction:column;gap:8px}
 .exam-card{border-radius:var(--radius);border:1.5px solid transparent;overflow:hidden;transition:transform .12s}
 .exam-card-inner{display:grid;grid-template-columns:1fr auto;gap:0 12px;padding:14px 16px;align-items:center}
 .exam-subject{font-weight:600;font-size:14px;margin-bottom:4px;line-height:1.2}
-.exam-meta{font-size:11px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;opacity:0.85}
-.slot-pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(255,255,255,0.3)}
+.exam-meta{font-size:11px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;opacity:.85}
+.slot-pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(255,255,255,.3)}
+.exam-count{font-family:'DM Mono',monospace;font-size:22px;font-weight:500}
 
-/* GATE MODAL OVERLAY */
-.modal-overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px}
-.modal-card{background:var(--surface); width:100%; max-width:400px; border-radius:var(--radius); padding:24px; border:1px solid var(--border)}
-.modal-stat-row{display:flex; justify-content:space-between; margin-bottom:12px; padding:8px 0; border-bottom:1px dashed var(--border)}
+/* ── MODALS ──────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-card{background:var(--surface);width:100%;max-width:420px;border-radius:var(--radius);padding:24px;border:1px solid var(--border)}
+.modal-stat-row{display:flex;justify-content:space-between;margin-bottom:12px;padding:8px 0;border-bottom:1px dashed var(--border)}
 
-/* FORM & UI */
+/* ── FORM & BUTTONS ──────────────────────────────── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:15px}
-input, select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);width:100%}
-.btn-primary{background:var(--blue-mid);color:white;border:none;border-radius:8px;padding:12px;font-weight:600;cursor:pointer;width:100%}
-.btn-small{background:var(--surface2);border:1px solid var(--border);padding:6px 10px;font-size:11px;border-radius:4px;cursor:pointer;color:var(--text);font-weight:500}
+label{display:block;font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+
+/* MOBILE FIX: 16px font prevents iOS auto-zoom on inputs */
+input,select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);width:100%;font-family:'Outfit',sans-serif;font-size:16px;transition:.15s}
+input:focus,select:focus{outline:none;border-color:var(--blue-mid);box-shadow:0 0 0 3px var(--blue-bg)}
+input::placeholder{color:var(--text-3)}
+
+.btn-primary{background:var(--blue-mid);color:white;border:none;border-radius:8px;padding:14px;font-weight:600;cursor:pointer;width:100%;font-family:'Outfit',sans-serif;font-size:15px;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary:hover{background:#2563eb}
+
+/* Mobile touch targets */
+.btn-small{background:var(--surface2);border:1px solid var(--border);padding:8px 12px;font-size:12px;border-radius:6px;cursor:pointer;color:var(--text);font-weight:500;font-family:'Outfit',sans-serif;transition:.12s}
+.btn-small:hover{border-color:var(--blue-mid);color:var(--blue)}
+.btn-danger{color:var(--red-mid)!important}
+.btn-danger:hover{background:var(--red-bg)!important;border-color:var(--red-mid)!important}
+
+/* ── REPORT SPECIFIC ─────────────────────────────── */
 .report-section{border-left:4px solid var(--blue-mid);padding-left:15px;margin-bottom:20px}
 .remarks-box{background:var(--surface2);padding:12px;border-radius:8px;font-style:italic;font-size:13px;margin-top:8px;border:1px dashed var(--border-strong)}
-.exam-row{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border)}
-.exam-row-dot{width:8px; height:8px; border-radius:50%; margin-right:12px; flex-shrink:0}
+.exam-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:8px}
+.exam-row-dot{width:8px;height:8px;border-radius:50%;margin-right:8px;flex-shrink:0}
 
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px;z-index:100}
-@media(max-width:600px){.topbar-nav{display:none} .bottom-nav{display:flex; justify-content:space-around}}
+/* ── FORM GRID ───────────────────────────────────── */
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
 
-/* Toast Notification */
-.toast {position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--blue-mid); color:white; padding:10px 20px; border-radius:30px; font-size:13px; font-weight:500; opacity:0; pointer-events:none; transition:0.3s; z-index:9999;}
-.toast.show {opacity:1; bottom:100px;}
+/* ── CENTER BADGE ────────────────────────────────── */
+.center-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+.center-eb{background:#dbeafe;color:#1d4ed8}
+.center-nlt{background:#ede9fe;color:#6d28d9}
+.center-jp{background:#dcfce7;color:#15803d}
+[data-theme="dark"] .center-eb{background:#1e2d4a;color:#93c5fd}
+[data-theme="dark"] .center-nlt{background:#221a3a;color:#c4b5fd}
+[data-theme="dark"] .center-jp{background:#14281e;color:#86efac}
+
+/* ── BOTTOM NAV (MOBILE FIXES) ────────────────────── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 10px max(10px, env(safe-area-inset-bottom));z-index:100}
+.bottom-nav-btn{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:11px;font-family:'Outfit',sans-serif;font-weight:500;padding:8px;border-radius:8px;flex:1;transition:.15s;display:flex;flex-direction:column;align-items:center}
+.bottom-nav-btn.active{color:var(--blue); background:var(--blue-bg)}
+@media(max-width:620px){
+  .topbar-nav{display:none}
+  .bottom-nav{display:flex}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .form-grid-2{grid-template-columns:1fr}
+}
+
+/* ── TOAST ───────────────────────────────────────── */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:30px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:9999;white-space:nowrap;box-shadow:0 10px 25px rgba(0,0,0,0.2)}
+.toast.show{opacity:1;bottom:120px}
+.toast.success{background:#22c55e;color:white}
+.toast.error{background:var(--red-mid);color:white}
+.toast.info{background:var(--blue-mid);color:white}
+.toast.warn{background:#d97706;color:white}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-3);font-style:italic}
+.section-header{font-weight:600;font-size:14px;color:var(--text);margin-bottom:12px}
 </style>
 </head>
 <body data-theme="dark">
 
 <div class="topbar">
-  <div class="topbar-brand">Exam Hub PRO</div>
+  <div class="topbar-brand">🎓 Exam Hub PRO</div>
   <nav class="topbar-nav">
-    <button class="nav-btn active" onclick="showPanel('dashboard')">Dashboard</button>
-    <button class="nav-btn" onclick="showPanel('schedule')">Schedule</button>
-    <button class="nav-btn" onclick="showPanel('staff')">Staff</button>
-    <button class="nav-btn" onclick="showPanel('reports')">Reports</button>
-    <button class="nav-btn" onclick="showPanel('recruitment')">Recruits</button>
+    <button class="nav-btn active" id="tnav-dashboard" onclick="showPanel('dashboard')">Dashboard</button>
+    <button class="nav-btn" id="tnav-schedule" onclick="showPanel('schedule')">Schedule</button>
+    <button class="nav-btn" id="tnav-staff" onclick="showPanel('staff')">Staff</button>
+    <button class="nav-btn" id="tnav-reports" onclick="showPanel('reports')">Reports</button>
+    <button class="nav-btn" id="tnav-recruitment" onclick="showPanel('recruitment')">Recruits</button>
   </nav>
-  <button onclick="toggleTheme()" style="background:none; border:none; cursor:pointer; font-size:18px">◑</button>
+  <div class="topbar-right">
+    <span id="sync-badge" class="offline">⏳ Loading…</span>
+    <button onclick="toggleTheme()" title="Toggle theme" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-2)">◑</button>
+  </div>
 </div>
 
 <div class="main">
+
   <div class="panel active" id="panel-dashboard">
     <div class="stats-grid" id="stats-grid"></div>
-    
-    <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center">
-        <select id="dash-week-filter" onchange="renderDashboard()" style="padding:6px; font-size:12px; border-radius:4px; background:var(--surface2); color:var(--text); border:1px solid var(--border); width:auto">
-            <option value="all">Active Roster (Auto-Hide Past)</option>
-            <option value="1">Week 1 (May 4 - 8)</option>
-            <option value="2">Week 2 (May 11 - 15)</option>
-            <option value="3">Week 3 (May 18 - 22)</option>
-            <option value="4">Week 4 (May 25 - 29)</option>
-            <option value="5">Week 5 (June 1 - 5)</option>
-            <option value="6">Week 6 (June 8 - 12)</option>
-            <option value="7">Week 7 (Final Days)</option>
-        </select>
+    <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <select id="dash-week-filter" onchange="renderDashboard()" style="padding:7px 10px;font-size:14px;border-radius:6px;background:var(--surface2);color:var(--text);border:1px solid var(--border);width:auto">
+        <option value="all">Active Roster (Auto-Hide Past)</option>
+        <option value="1">Week 1 (May 4–8)</option>
+        <option value="2">Week 2 (May 11–15)</option>
+        <option value="3">Week 3 (May 18–22)</option>
+        <option value="4">Week 4 (May 25–29)</option>
+        <option value="5">Week 5 (Jun 1–5)</option>
+        <option value="6">Week 6 (Jun 8–12)</option>
+        <option value="7">Week 7 (Final Days)</option>
+      </select>
+      <button class="btn-small" onclick="showPanel('schedule')" style="background:var(--blue-mid);color:white;border:none;padding:10px 14px;font-size:13px;font-weight:600">+ Add Exam</button>
     </div>
-
     <div id="exam-list-container"></div>
     <div id="reminders-container" style="margin-top:20px"></div>
   </div>
 
   <div class="modal-overlay" id="gate-modal" onclick="this.style.display='none'">
-      <div class="modal-card" onclick="event.stopPropagation()">
-          <h3 id="modal-date-title" style="margin-bottom:15px; font-weight:600">Daily Summary</h3>
-          <div id="modal-stats-content"></div>
-          <button class="btn-primary" style="margin-top:20px" onclick="document.getElementById('gate-modal').style.display='none'">Close Gate</button>
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <h3 id="modal-date-title" style="margin-bottom:15px;font-weight:600">Daily Summary</h3>
+      <div id="modal-stats-content"></div>
+      <button class="btn-primary" style="margin-top:20px" onclick="document.getElementById('gate-modal').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="success-modal" onclick="this.style.display='none'">
+    <div class="modal-card" style="text-align:center; max-width: 320px;" onclick="event.stopPropagation()">
+      <div style="font-size:48px; margin-bottom:10px">✅</div>
+      <h3 style="margin-bottom:8px; font-weight:600">Exam Saved!</h3>
+      <p style="font-size:13px; color:var(--text-2); margin-bottom:24px">The schedule has been successfully updated.</p>
+      
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <button class="btn-primary" onclick="document.getElementById('success-modal').style.display='none'; document.getElementById('f-subject').focus();">
+          ➕ Add Another Exam
+        </button>
+        <button class="btn-primary" style="background:var(--surface2); color:var(--text); border:1px solid var(--border);" onclick="document.getElementById('success-modal').style.display='none'; showPanel('dashboard');">
+          🏠 Return to Dashboard
+        </button>
       </div>
+    </div>
   </div>
 
   <div class="panel" id="panel-schedule">
     <div class="card" style="margin-bottom:18px">
-      <div class="section-header" style="margin-bottom:16px"><span class="section-title">Add External / Custom Exam</span></div>
-      <div class="form-grid">
-        <div class="form-group" style="margin-bottom:10px"><label>Subject</label><input type="text" id="f-subject" placeholder="e.g. CSEC Biology P032"></div>
-        <div class="form-group" style="margin-bottom:10px"><label>Center</label>
-          <select id="f-center"><option value="Enid Bennett">Enid Bennett</option><option value="100658">NLT (100658)</option><option value="100427">JP (100427)</option></select>
-        </div>
-        <div class="form-group" style="margin-bottom:10px"><label>Date</label><input type="date" id="f-date"></div>
-        <div class="form-group" style="margin-bottom:10px"><label>Time slot</label>
-          <select id="f-time"><option value="Morning (9:00 AM)">Morning — 9:00 AM</option><option value="Afternoon (1:00 PM)">Afternoon — 1:00 PM</option></select>
-        </div>
-        <div class="form-group" style="margin-bottom:10px"><label>Room / location</label><input type="text" id="f-room" placeholder="e.g. Science Lab"></div>
-        <div class="form-group" style="margin-bottom:15px"><label>Candidates</label><input type="number" id="f-candidates" value="10"></div>
+      <div class="section-header" style="margin-bottom:14px">➕ Add Exam to Schedule</div>
+
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Exam Center</label>
+        <select id="f-center" onchange="onCenterChange()" style="font-weight:600">
+          <option value="Enid Bennett">🏫 Enid Bennett High (Home)</option>
+          <option value="100658">📍 NLT — Centre 100658</option>
+          <option value="100427">📍 JP — Centre 100427</option>
+        </select>
       </div>
-      <button class="btn-primary" onclick="saveExam()">Save to schedule</button>
+
+      <div class="form-grid-2">
+        <div class="form-group full">
+          <label>Subject / Paper</label>
+          <input type="text" id="f-subject" placeholder="e.g. CSEC Biology Gen P2">
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <label>Time Slot</label>
+          <select id="f-time">
+            <option value="Morning (9:00 AM)">Morning — 9:00 AM</option>
+            <option value="Afternoon (1:00 PM)">Afternoon — 1:00 PM</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Room / Location</label>
+          <input type="text" id="f-room" placeholder="e.g. Main Hall">
+        </div>
+        <div class="form-group">
+          <label>Candidates</label>
+          <input type="number" id="f-candidates" value="10" min="1">
+        </div>
+        <div class="form-group full" id="f-notes-group">
+          <label>Notes (optional)</label>
+          <input type="text" id="f-notes" placeholder="e.g. Online, Reading exam">
+        </div>
+      </div>
+
+      <div id="center-info-banner" style="display:none;margin:12px 0;padding:10px 14px;border-radius:8px;font-size:12px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue)33">
+        ℹ️ <span id="center-info-text"></span>
+      </div>
+
+      <button class="btn-primary" onclick="saveExam()" style="margin-top:16px" id="save-exam-btn">
+        <span>💾 Save to Schedule</span>
+      </button>
     </div>
-    
-    <div class="section-header" style="margin-bottom:10px; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
-        <span class="section-title">All exams</span>
-        <input type="text" id="schedule-filter" placeholder="Search subject, room..." onkeyup="renderAllExams()" style="width:180px; padding:6px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text);">
+
+    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div class="section-header" style="margin-bottom:0">All Scheduled Exams</div>
+      <input type="text" id="schedule-filter" placeholder="🔍 Search subject, room…" onkeyup="renderAllExams()" style="width:100%;max-width:220px;padding:10px;font-size:14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text)">
     </div>
-    
+    <div id="schedule-count" style="font-size:12px;color:var(--text-3);margin-bottom:10px"></div>
     <div id="all-exams-list"></div>
   </div>
 
   <div class="panel" id="panel-staff">
     <div class="card" style="margin-bottom:18px">
-      <div class="section-header" style="margin-bottom:10px; font-weight:600;"><span class="section-title">Invigilator Roster</span></div>
-      <div style="display:flex; gap:10px; margin:10px 0">
-        <input type="text" id="new-staff-name" placeholder="Staff Name" style="width:100%">
-        <button onclick="addStaff()" class="btn-primary" style="width:auto; margin-top:0">Add</button>
+      <div class="section-header" style="margin-bottom:12px">👤 Invigilator Roster</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <input type="text" id="new-staff-name" placeholder="Full name of invigilator" style="flex:1" onkeydown="if(event.key==='Enter')addStaff()">
+        <button onclick="addStaff()" class="btn-primary" style="width:auto;padding:10px 16px;white-space:nowrap">+ Add</button>
       </div>
       <div id="staff-list"></div>
     </div>
-    <div class="section-header" style="margin-bottom:10px; font-weight:600;"><span class="section-title">Timesheet Summary</span></div>
+    <div class="section-header" style="margin-bottom:10px">📊 Timesheet Summary</div>
     <div id="staff-stats"></div>
   </div>
 
   <div class="panel" id="panel-recruitment">
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div class="section-header" style="margin-bottom:0; font-weight:600;"><span class="section-title">🚨 Recruitment Radar</span></div>
-          <button class="btn-small" onclick="printRecruitmentReport()" style="background:var(--blue-mid); color:white; border:none; padding:8px 12px;">🖨️ Print / Save PDF</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="section-header" style="margin-bottom:0">🚨 Recruitment Radar</div>
+        <button class="btn-small" onclick="printRecruitmentReport()" style="background:var(--blue-mid);color:white;border:none;padding:10px 14px">🖨️ Print / PDF</button>
       </div>
-      <p style="font-size:12px; color:var(--text-2); margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-          Select a date range to find sessions requiring extra invigilators.
-      </p>
-      
-      <div style="display:flex; gap:10px; margin-bottom:20px;">
-          <div style="flex:1">
-              <label style="font-size:11px; color:var(--text-2); font-weight:600;">START DATE</label>
-              <input type="date" id="recruit-start" onchange="renderRecruitment()" style="padding:8px;">
-          </div>
-          <div style="flex:1">
-              <label style="font-size:11px; color:var(--text-2); font-weight:600;">END DATE</label>
-              <input type="date" id="recruit-end" onchange="renderRecruitment()" style="padding:8px;">
-          </div>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:15px;border-bottom:1px solid var(--border);padding-bottom:10px">Select a date range to identify sessions needing extra invigilators.</p>
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px">
+          <label>START DATE</label>
+          <input type="date" id="recruit-start" onchange="renderRecruitment()" style="padding:10px">
+        </div>
+        <div style="flex:1;min-width:140px">
+          <label>END DATE</label>
+          <input type="date" id="recruit-end" onchange="renderRecruitment()" style="padding:10px">
+        </div>
       </div>
-
       <div id="recruitment-list"></div>
     </div>
   </div>
 
   <div class="panel" id="panel-reports">
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <div class="section-header" style="margin-bottom:0; font-weight:600;"><span class="section-title">Advanced Master Report</span></div>
-          <button class="btn-small" onclick="printMasterReport()" style="background:var(--blue-mid); color:white; border:none; padding:8px 12px;">🖨️ Print / Save PDF</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div class="section-header" style="margin-bottom:0">📋 Master Logistics Report</div>
+        <button class="btn-small" onclick="printMasterReport()" style="background:var(--blue-mid);color:white;border:none;padding:10px 14px">🖨️ Print / PDF</button>
       </div>
-      
-      <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-          <div>
-              <label style="font-size:11px; color:var(--text-2); font-weight:600;">START DATE</label>
-              <input type="date" id="rep-start" onchange="renderReports()" style="padding:8px;">
-          </div>
-          <div>
-              <label style="font-size:11px; color:var(--text-2); font-weight:600;">END DATE</label>
-              <input type="date" id="rep-end" onchange="renderReports()" style="padding:8px;">
-          </div>
-          <div>
-              <label style="font-size:11px; color:var(--text-2); font-weight:600;">CENTER</label>
-              <select id="rep-center" onchange="renderReports()" style="padding:8px;">
-                  <option value="all">All Centers</option>
-                  <option value="Enid Bennett">Enid Bennett</option>
-                  <option value="100658">NLT (100658)</option>
-                  <option value="100427">JP (100427)</option>
-              </select>
-          </div>
-          <div>
-              <label style="font-size:11px; color:var(--text-2); font-weight:600;">SUBJECT</label>
-              <input type="text" id="rep-subj" placeholder="Type to filter..." onkeyup="renderReports()" style="padding:8px;">
-          </div>
-          <div style="grid-column: span 2;">
-              <label style="font-size:11px; color:var(--text-2); font-weight:600;">INVIGILATOR</label>
-              <select id="rep-invig" onchange="renderReports()" style="padding:8px;">
-                  <option value="all">All Staff</option>
-              </select>
-          </div>
+      <div class="form-grid-2" style="margin-bottom:15px">
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" id="rep-start" onchange="renderReports()">
+        </div>
+        <div class="form-group">
+          <label>End Date</label>
+          <input type="date" id="rep-end" onchange="renderReports()">
+        </div>
+        <div class="form-group">
+          <label>Center</label>
+          <select id="rep-center" onchange="renderReports()">
+            <option value="all">All Centers</option>
+            <option value="Enid Bennett">Enid Bennett</option>
+            <option value="100658">NLT (100658)</option>
+            <option value="100427">JP (100427)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Subject Filter</label>
+          <input type="text" id="rep-subj" placeholder="Type to filter…" onkeyup="renderReports()">
+        </div>
+        <div class="form-group full">
+          <label>Invigilator</label>
+          <select id="rep-invig" onchange="renderReports()">
+            <option value="all">All Staff</option>
+          </select>
+        </div>
       </div>
-
-      <div id="report-content" style="margin-top:20px; border-top:1px solid var(--border); padding-top:15px;"></div>
+      <div id="report-content" style="margin-top:20px;border-top:1px solid var(--border);padding-top:15px"></div>
     </div>
   </div>
 
-</div>
-
-<nav class="bottom-nav">
-  <div class="bottom-nav-inner" style="display:flex; justify-content:space-around; width:100%;">
-    <button class="bottom-nav-btn active" onclick="showPanel('dashboard')" id="bnav-dashboard"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" style="width:20px;height:20px;display:block;margin:0 auto 4px;"><rect x="2" y="2" width="8" height="8" rx="2"/><rect x="12" y="2" width="8" height="8" rx="2"/><rect x="2" y="12" width="8" height="8" rx="2"/><rect x="12" y="12" width="8" height="8" rx="2"/></svg>Dashboard</button>
-    <button class="bottom-nav-btn" onclick="showPanel('schedule')" id="bnav-schedule"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" style="width:20px;height:20px;display:block;margin:0 auto 4px;"><rect x="3" y="4" width="16" height="15" rx="2.5"/><path d="M8 2v3M14 2v3M3 9h16M11 13v4M9 15h4"/></svg>Schedule</button>
-    <button class="bottom-nav-btn" onclick="showPanel('staff')" id="bnav-staff"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" style="width:20px;height:20px;display:block;margin:0 auto 4px;"><circle cx="11" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h8a4 4 0 014 4v2"/></svg>Staff</button>
-    <button class="bottom-nav-btn" onclick="showPanel('reports')" id="bnav-reports"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" style="width:20px;height:20px;display:block;margin:0 auto 4px;"><path d="M4 6h14M4 11h9M4 16h11"/></svg>Reports</button>
-    <button class="bottom-nav-btn" onclick="showPanel('recruitment')" id="bnav-recruitment"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" style="width:20px;height:20px;display:block;margin:0 auto 4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Recruits</button>
-  </div>
+</div><nav class="bottom-nav">
+  <button class="bottom-nav-btn active" id="bnav-dashboard" onclick="showPanel('dashboard')">
+    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;display:block;margin:0 auto 4px"><rect x="2" y="2" width="8" height="8" rx="2"/><rect x="12" y="2" width="8" height="8" rx="2"/><rect x="2" y="12" width="8" height="8" rx="2"/><rect x="12" y="12" width="8" height="8" rx="2"/></svg>Dashboard
+  </button>
+  <button class="bottom-nav-btn" id="bnav-schedule" onclick="showPanel('schedule')">
+    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;display:block;margin:0 auto 4px"><rect x="3" y="4" width="16" height="15" rx="2.5"/><path d="M8 2v3M14 2v3M3 9h16M11 13v4M9 15h4"/></svg>Schedule
+  </button>
+  <button class="bottom-nav-btn" id="bnav-staff" onclick="showPanel('staff')">
+    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;display:block;margin:0 auto 4px"><circle cx="11" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h8a4 4 0 014 4v2"/></svg>Staff
+  </button>
+  <button class="bottom-nav-btn" id="bnav-reports" onclick="showPanel('reports')">
+    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;display:block;margin:0 auto 4px"><path d="M4 6h14M4 11h9M4 16h11"/></svg>Reports
+  </button>
 </nav>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const SK='enid_bennett_db_v3', STK='enid_staff_v3';
-const COLS=[{mid:'#3b82f6',dark:'#93c5fd',bg:'#dbeafe',dbg:'#1e2d4a'},{mid:'#22c55e',dark:'#86efac',bg:'#dcfce7',dbg:'#14281e'},{mid:'#f97316',dark:'#fdba74',bg:'#ffedd5',dbg:'#2a1406'},{mid:'#8b5cf6',dark:'#c4b5fd',bg:'#ede9fe',dbg:'#221a3a'},{mid:'#ef4444',dark:'#fca5a5',bg:'#fee2e2',dbg:'#2d1212'},{mid:'#14b8a6',dark:'#5eead4',bg:'#ccfbf1',dbg:'#0c2420'}];
+// ═══════════════════════════════════════════════════════
+//  CONSTANTS & COLOUR PALETTE
+// ═══════════════════════════════════════════════════════
+const SK  = 'enid_bennett_db_v4';
+const STK = 'enid_staff_v4';
 
-const AUX_REGEX = /(digital media|edpm|tech.*drawing.*p2|music|visual arts|spanish.*p1|online|reading|paper\s*0?32|p0?32)/i;
-
-const getStaffNeeded = (n) => Math.max(1, Math.ceil(n / 30));
-
-const getDailyStaff = (examsArr) => {
-    const timeSlots = {};
-    examsArr.forEach(e => {
-        if (!timeSlots[e.time]) timeSlots[e.time] = {};
-        
-        const searchString = e.subject + ' ' + (e.notes||'') + ' ' + (e.room||'');
-        let r;
-        
-        if (AUX_REGEX.test(searchString)) {
-            r = "Auxiliary: " + ((e.room && e.room !== "TBD") ? e.room : e.subject); 
-        } else {
-            r = "Main Hall Pool"; 
-        }
-
-        if (!timeSlots[e.time][r]) timeSlots[e.time][r] = { cands: 0, manualMax: 0 };
-        
-        timeSlots[e.time][r].cands += e.candidates + (e.ext_nlt || 0) + (e.ext_jp || 0);
-        if (e.manual_staff > timeSlots[e.time][r].manualMax) {
-            timeSlots[e.time][r].manualMax = e.manual_staff;
-        }
-    });
-
-    let peakStaffNeeded = 0;
-    for (const time in timeSlots) {
-        let staffForThisSlot = 0;
-        for (const room in timeSlots[time]) {
-            const data = timeSlots[time][room];
-            const autoStaff = Math.max(1, Math.ceil(data.cands / 30));
-            staffForThisSlot += Math.max(autoStaff, data.manualMax);
-        }
-        if (staffForThisSlot > peakStaffNeeded) peakStaffNeeded = staffForThisSlot;
-    }
-    return peakStaffNeeded;
-};
-
-const BASE_EXAMS = [
-  // W1
-  { id: 101, subject: "CAPE Food & Nut U2 P2", room: "Food Lab", date: "2026-05-04", time: "Morning (9:00 AM)", candidates: 3, center: "Enid Bennett" },
-  { id: 102, subject: "CAPE Digital Media U2 P2", room: "Computer Lab A", date: "2026-05-04", time: "Morning (9:00 AM)", candidates: 1, center: "Enid Bennett", notes: "Online" },
-  { id: 103, subject: "CSEC RE Gen P2", room: "Main Hall", date: "2026-05-04", time: "Morning (9:00 AM)", candidates: 1, center: "Enid Bennett" },
-  { id: 104, subject: "CSEC English A Gen P2", room: "Main Hall", date: "2026-05-05", time: "Morning (9:00 AM)", candidates: 30, center: "Enid Bennett" },
-  { id: 105, subject: "CSEC Spanish Gen P2", room: "Language Lab", date: "2026-05-05", time: "Afternoon (1:00 PM)", candidates: 1, center: "Enid Bennett" },
-  { id: 106, subject: "CSEC Textiles Tech P2", room: "Clothing Lab", date: "2026-05-06", time: "Morning (9:00 AM)", candidates: 4, center: "Enid Bennett" },
-  { id: 107, subject: "CAPE Ag Sci U1 P2", room: "Agri Lab", date: "2026-05-06", time: "Morning (9:00 AM)", candidates: 1, center: "Enid Bennett" },
-  { id: 108, subject: "CAPE Logistics U1 P2", room: "Main Hall", date: "2026-05-06", time: "Morning (9:00 AM)", candidates: 7, center: "Enid Bennett" },
-  { id: 109, subject: "CAPE Env Sci U1 P2", room: "Main Hall", date: "2026-05-06", time: "Afternoon (1:00 PM)", candidates: 8, center: "Enid Bennett" },
-  { id: 110, subject: "CAPE Sociology U1 P2", room: "Classroom 1", date: "2026-05-06", time: "Afternoon (1:00 PM)", candidates: 3, center: "Enid Bennett" },
-  { id: 111, subject: "CSEC Ag Sci SA Gen P2", room: "Agri Lab", date: "2026-05-06", time: "Afternoon (1:00 PM)", candidates: 13, center: "Enid Bennett" },
-  { id: 112, subject: "CAPE Carib Studies P2", room: "Main Hall", date: "2026-05-07", time: "Morning (9:00 AM)", candidates: 3, center: "Enid Bennett" },
-  { id: 113, subject: "CSEC POA Gen P2", room: "Main Hall", date: "2026-05-07", time: "Morning (9:00 AM)", candidates: 7, center: "Enid Bennett" },
-  { id: 114, subject: "CSEC Textiles Tech P1", room: "Clothing Lab", date: "2026-05-07", time: "Afternoon (1:00 PM)", candidates: 4, center: "Enid Bennett" },
-  { id: 115, subject: "CAPE IT U1 P2", room: "Computer Lab A", date: "2026-05-08", time: "Morning (9:00 AM)", candidates: 2, center: "Enid Bennett" },
-  { id: 116, subject: "CSEC EDPM Gen P2", room: "Computer Lab B", date: "2026-05-08", time: "Morning (9:00 AM)", candidates: 10, center: "Enid Bennett" },
-  // W2
-  { id: 201, subject: "CAPE Comm Studies P2", room: "Main Hall", date: "2026-05-11", time: "Morning (9:00 AM)", candidates: 18, center: "Enid Bennett" },
-  { id: 202, subject: "CSEC Tech Drawing P2", room: "CAD Lab", date: "2026-05-11", time: "Morning (9:00 AM)", candidates: 7, center: "Enid Bennett" },
-  { id: 203, subject: "CSEC HSB Gen P2", room: "Main Hall", date: "2026-05-11", time: "Afternoon (1:00 PM)", candidates: 19, center: "Enid Bennett" },
-  { id: 204, subject: "CSEC Math Gen P2", room: "Main Hall", date: "2026-05-12", time: "Morning (9:00 AM)", candidates: 41, center: "Enid Bennett" },
-  { id: 205, subject: "CSEC English B Gen P2", room: "Main Hall", date: "2026-05-12", time: "Afternoon (1:00 PM)", candidates: 5, center: "Enid Bennett" },
-  { id: 206, subject: "CSEC Social Studies Gen P2", room: "Main Hall", date: "2026-05-13", time: "Morning (9:00 AM)", candidates: 33, center: "Enid Bennett" },
-  { id: 207, subject: "CAPE Logistics U2 P2", room: "Classroom 1", date: "2026-05-13", time: "Morning (9:00 AM)", candidates: 3, center: "Enid Bennett" },
-  { id: 208, subject: "CSEC Ind Tech Elec P2", room: "Tech Lab", date: "2026-05-13", time: "Afternoon (1:00 PM)", candidates: 10, center: "Enid Bennett" },
-  { id: 209, subject: "CSEC Biology Gen P2", room: "Science Lab", date: "2026-05-14", time: "Morning (9:00 AM)", candidates: 6, center: "Enid Bennett" },
-  { id: 210, subject: "CSEC IT Gen P2", room: "Computer Lab A", date: "2026-05-14", time: "Afternoon (1:00 PM)", candidates: 16, center: "Enid Bennett" },
-  { id: 211, subject: "CSEC Integ Sci Gen P2", room: "Science Lab", date: "2026-05-15", time: "Morning (9:00 AM)", candidates: 14, center: "Enid Bennett" },
-  { id: 212, subject: "CSEC POB Gen P2", room: "Main Hall", date: "2026-05-15", time: "Afternoon (1:00 PM)", candidates: 20, center: "Enid Bennett" },
-  // W3
-  { id: 301, subject: "CAPE Acct U1 P2", room: "Classroom 1", date: "2026-05-18", time: "Morning (9:00 AM)", candidates: 5, center: "Enid Bennett" },
-  { id: 302, subject: "CSEC Family/Res Mgt P2", room: "Main Hall", date: "2026-05-18", time: "Afternoon (1:00 PM)", candidates: 8, center: "Enid Bennett" },
-  { id: 303, subject: "CSEC Chem Gen P2", room: "Science Lab", date: "2026-05-19", time: "Morning (9:00 AM)", candidates: 8, center: "Enid Bennett" },
-  { id: 304, subject: "CAPE Dig Media U1 P2", room: "Computer Lab A", date: "2026-05-19", time: "Morning (9:00 AM)", candidates: 14, center: "Enid Bennett", notes: "Online" },
-  { id: 305, subject: "CSEC Ind Tech Build P2", room: "Tech Lab", date: "2026-05-19", time: "Morning (9:00 AM)", candidates: 6, center: "Enid Bennett" },
-  { id: 306, subject: "CAPE MOB U2 P2", room: "Classroom 1", date: "2026-05-19", time: "Afternoon (1:00 PM)", candidates: 2, center: "Enid Bennett" },
-  { id: 307, subject: "CSEC Ind Tech Mech P2", room: "Tech Lab", date: "2026-05-20", time: "Morning (9:00 AM)", candidates: 6, center: "Enid Bennett" },
-  { id: 308, subject: "CAPE Bio U2 P2", room: "Science Lab", date: "2026-05-20", time: "Morning (9:00 AM)", candidates: 3, center: "Enid Bennett" },
-  { id: 309, subject: "CSEC OA Gen P2", room: "Main Hall", date: "2026-05-20", time: "Afternoon (1:00 PM)", candidates: 8, center: "Enid Bennett" },
-  { id: 310, subject: "CSEC Spanish Gen P1", room: "Language Lab", date: "2026-05-20", time: "Afternoon (1:00 PM)", candidates: 1, center: "Enid Bennett", notes: "Reading" },
-  { id: 311, subject: "CSEC Food/Nut Tech P2", room: "Food Lab", date: "2026-05-21", time: "Morning (9:00 AM)", candidates: 5, center: "Enid Bennett" },
-  { id: 312, subject: "CSEC Carib History P2", room: "Main Hall", date: "2026-05-21", time: "Morning (9:00 AM)", candidates: 9, center: "Enid Bennett" },
-  { id: 313, subject: "CAPE Food/Nut U2 P1", room: "Food Lab", date: "2026-05-21", time: "Afternoon (1:00 PM)", candidates: 3, center: "Enid Bennett" },
-  { id: 314, subject: "CSEC POA Gen P1", room: "Main Hall", date: "2026-05-21", time: "Afternoon (1:00 PM)", candidates: 7, center: "Enid Bennett" },
-  { id: 315, subject: "CSEC Physics Gen P2", room: "Science Lab", date: "2026-05-22", time: "Morning (9:00 AM)", candidates: 7, center: "Enid Bennett" },
-  { id: 316, subject: "CAPE MOB U1 P2", room: "Classroom 1", date: "2026-05-22", time: "Morning (9:00 AM)", candidates: 7, center: "Enid Bennett" },
-  { id: 317, subject: "CSEC PE Gen P1", room: "Main Hall", date: "2026-05-22", time: "Afternoon (1:00 PM)", candidates: 8, center: "Enid Bennett" },
-  // W4
-  { id: 401, subject: "CAPE Entrep U2 P2", room: "Main Hall", date: "2026-05-25", time: "Morning (9:00 AM)", candidates: 1, center: "Enid Bennett" },
-  { id: 402, subject: "CSEC Family/Res Mgt P1", room: "Main Hall", date: "2026-05-25", time: "Morning (9:00 AM)", candidates: 8, center: "Enid Bennett" },
-  { id: 403, subject: "CAPE Dig Media U2 P1", room: "Computer Lab A", date: "2026-05-25", time: "Afternoon (1:00 PM)", candidates: 1, center: "Enid Bennett", notes: "Online" },
-  { id: 404, subject: "CAPE Logistics U2 P1", room: "Main Hall", date: "2026-05-25", time: "Afternoon (1:00 PM)", candidates: 3, center: "Enid Bennett" },
-  { id: 405, subject: "CSEC English A Gen P1", room: "Main Hall", date: "2026-05-26", time: "Morning (9:00 AM)", candidates: 30, center: "Enid Bennett" },
-  { id: 406, subject: "CAPE Bio U2 P1", room: "Science Lab", date: "2026-05-26", time: "Afternoon (1:00 PM)", candidates: 3, center: "Enid Bennett" },
-  { id: 407, subject: "CSEC Ag Sci SA Gen P1", room: "Agri Lab", date: "2026-05-27", time: "Morning (9:00 AM)", candidates: 13, center: "Enid Bennett" },
-  { id: 408, subject: "CAPE Entrep U1 P2", room: "Classroom 1", date: "2026-05-27", time: "Morning (9:00 AM)", candidates: 6, center: "Enid Bennett" },
-  { id: 409, subject: "CAPE Dig Media U1 P1", room: "Computer Lab A", date: "2026-05-27", time: "Morning (9:00 AM)", candidates: 14, center: "Enid Bennett", notes: "Online" },
-  { id: 410, subject: "CSEC Math Gen P1", room: "Main Hall", date: "2026-05-28", time: "Morning (9:00 AM)", candidates: 41, center: "Enid Bennett" },
-  { id: 411, subject: "CAPE Acct U1 P1", room: "Main Hall", date: "2026-05-29", time: "Morning (9:00 AM)", candidates: 5, center: "Enid Bennett" },
-  { id: 412, subject: "CSEC IT Gen P1", room: "Computer Lab A", date: "2026-05-29", time: "Morning (9:00 AM)", candidates: 16, center: "Enid Bennett" },
-  { id: 413, subject: "CSEC Integ Sci Gen P1", room: "Science Lab", date: "2026-05-29", time: "Afternoon (1:00 PM)", candidates: 14, center: "Enid Bennett" },
-  // W5
-  { id: 501, subject: "CSEC HSB Gen P1", room: "Main Hall", date: "2026-06-01", time: "Morning (9:00 AM)", candidates: 19, center: "Enid Bennett" },
-  { id: 502, subject: "CSEC Music Gen P1", room: "Music Studio", date: "2026-06-01", time: "Afternoon (1:00 PM)", candidates: 9, center: "Enid Bennett" },
-  { id: 503, subject: "CSEC Chem Gen P1", room: "Science Lab", date: "2026-06-01", time: "Afternoon (1:00 PM)", candidates: 8, center: "Enid Bennett" },
-  { id: 504, subject: "CSEC EDPM Gen P1", room: "Computer Lab B", date: "2026-06-02", time: "Morning (9:00 AM)", candidates: 10, center: "Enid Bennett" },
-  { id: 505, subject: "CSEC RE Gen P1", room: "Main Hall", date: "2026-06-02", time: "Morning (9:00 AM)", candidates: 1, center: "Enid Bennett" },
-  { id: 506, subject: "CAPE Soc U1 P1", room: "Classroom 1", date: "2026-06-02", time: "Morning (9:00 AM)", candidates: 3, center: "Enid Bennett" },
-  { id: 507, subject: "CAPE Ag Sci U1 P1", room: "Agri Lab", date: "2026-06-02", time: "Afternoon (1:00 PM)", candidates: 1, center: "Enid Bennett" },
-  { id: 508, subject: "CSEC Physics Gen P1", room: "Science Lab", date: "2026-06-02", time: "Afternoon (1:00 PM)", candidates: 7, center: "Enid Bennett" },
-  { id: 509, subject: "CSEC Theatre Arts P1", room: "Drama Studio", date: "2026-06-02", time: "Afternoon (1:00 PM)", candidates: 9, center: "Enid Bennett" },
-  { id: 510, subject: "CSEC Social Studies P1", room: "Main Hall", date: "2026-06-03", time: "Morning (9:00 AM)", candidates: 33, center: "Enid Bennett" },
-  { id: 511, subject: "CSEC OA Gen P1", room: "Main Hall", date: "2026-06-03", time: "Afternoon (1:00 PM)", candidates: 8, center: "Enid Bennett" },
-  { id: 512, subject: "CSEC Tech Drawing P1", room: "CAD Lab", date: "2026-06-04", time: "Morning (9:00 AM)", candidates: 7, center: "Enid Bennett" },
-  { id: 513, subject: "CSEC Food/Nut Tech P1", room: "Food Lab", date: "2026-06-04", time: "Afternoon (1:00 PM)", candidates: 5, center: "Enid Bennett" },
-  { id: 514, subject: "CSEC Biology Gen P1", room: "Science Lab", date: "2026-06-05", time: "Morning (9:00 AM)", candidates: 6, center: "Enid Bennett" },
-  { id: 515, subject: "CSEC POB Gen P1", room: "Main Hall", date: "2026-06-05", time: "Morning (9:00 AM)", candidates: 20, center: "Enid Bennett" },
-  { id: 516, subject: "CAPE Env Sci U1 P1", room: "Main Hall", date: "2026-06-05", time: "Afternoon (1:00 PM)", candidates: 8, center: "Enid Bennett" },
-  { id: 517, subject: "CSEC English B Gen P1", room: "Classroom 1", date: "2026-06-05", time: "Afternoon (1:00 PM)", candidates: 5, center: "Enid Bennett" },
-  // W6
-  { id: 601, subject: "CAPE Entrep U2 P1", room: "Main Hall", date: "2026-06-08", time: "Afternoon (1:00 PM)", candidates: 1, center: "Enid Bennett" },
-  { id: 602, subject: "CSEC Ind Tech P1 Comb", room: "Tech Lab", date: "2026-06-08", time: "Afternoon (1:00 PM)", candidates: 22, center: "Enid Bennett" },
-  { id: 603, subject: "CSEC Carib History P1", room: "Classroom 1", date: "2026-06-08", time: "Afternoon (1:00 PM)", candidates: 9, center: "Enid Bennett" },
-  { id: 604, subject: "CAPE MOB U2 P1", room: "Classroom 1", date: "2026-06-09", time: "Afternoon (1:00 PM)", candidates: 2, center: "Enid Bennett" },
-  { id: 605, subject: "C&G NCTVET English", room: "Reading Room", date: "2026-06-10", time: "Morning (9:00 AM)", candidates: 30, center: "Enid Bennett", notes: "Reading/Writing" },
-  { id: 606, subject: "CAPE IT U1 P1", room: "Computer Lab A", date: "2026-06-10", time: "Afternoon (1:00 PM)", candidates: 2, center: "Enid Bennett" },
-  { id: 607, subject: "C&G NCTVET Cust Serv", room: "Main Hall", date: "2026-06-11", time: "Morning (9:00 AM)", candidates: 30, center: "Enid Bennett" },
-  { id: 608, subject: "CAPE MOB U1 P1", room: "Classroom 1", date: "2026-06-11", time: "Morning (9:00 AM)", candidates: 7, center: "Enid Bennett" },
-  { id: 609, subject: "CAPE Logistics U1 P1", room: "Classroom 2", date: "2026-06-11", time: "Afternoon (1:00 PM)", candidates: 7, center: "Enid Bennett" },
-  { id: 610, subject: "C&G NCTVET Math", room: "Main Hall", date: "2026-06-12", time: "Morning (9:00 AM)", candidates: 30, center: "Enid Bennett" },
-  { id: 611, subject: "CAPE Entrep U1 P1", room: "Classroom 1", date: "2026-06-12", time: "Morning (9:00 AM)", candidates: 6, center: "Enid Bennett" },
-  // W7
-  { id: 701, subject: "CAPE Carib Studies P1", room: "Main Hall", date: "2026-06-15", time: "Morning (9:00 AM)", candidates: 3, center: "Enid Bennett" },
-  { id: 702, subject: "CAPE Comm Studies P1", room: "Main Hall", date: "2026-06-16", time: "Morning (9:00 AM)", candidates: 18, center: "Enid Bennett" }
+const COLS = [
+  {mid:'#3b82f6',dark:'#93c5fd',bg:'#dbeafe',dbg:'#1e2d4a'},
+  {mid:'#22c55e',dark:'#86efac',bg:'#dcfce7',dbg:'#14281e'},
+  {mid:'#f97316',dark:'#fdba74',bg:'#ffedd5',dbg:'#2a1406'},
+  {mid:'#8b5cf6',dark:'#c4b5fd',bg:'#ede9fe',dbg:'#221a3a'},
+  {mid:'#ef4444',dark:'#fca5a5',bg:'#fee2e2',dbg:'#2d1212'},
+  {mid:'#14b8a6',dark:'#5eead4',bg:'#ccfbf1',dbg:'#0c2420'}
 ];
 
-// --- FIREBASE LIVE SYNC ENGINE START --- //
+const AUX_REGEX = /(digital\s*media|edpm|tech.*drawing.*p2|music|visual\s*arts|spanish.*p1|online|reading|paper\s*0?32|p0?32)/i;
 
-// 1. LOAD FIREBASE LIBRARIES dynamically so they load before our script runs
-const script1 = document.createElement('script');
-script1.src = "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js";
-document.head.appendChild(script1);
+// ═══════════════════════════════════════════════════════
+//  ⚠️ FIREBASE RACE-CONDITION GUARD
+// ═══════════════════════════════════════════════════════
+let _syncLock       = false;
+let _syncLockTimer  = null;
+const LOCK_MS       = 5000;
 
-const script2 = document.createElement('script');
-script2.src = "https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js";
-document.head.appendChild(script2);
+function acquireSyncLock() {
+  _syncLock = true;
+  clearTimeout(_syncLockTimer);
+  _syncLockTimer = setTimeout(releaseSyncLock, LOCK_MS);
+}
+function releaseSyncLock() {
+  _syncLock = false;
+  clearTimeout(_syncLockTimer);
+}
 
-// 2. WAIT FOR LIBRARIES TO LOAD BEFORE INITIALIZING
-script2.onload = () => {
+// ═══════════════════════════════════════════════════════
+//  DATA HELPERS
+// ═══════════════════════════════════════════════════════
+function loadData() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(SK)); } catch(e) {}
+  if (!d || !Array.isArray(d.exams)) {
+    d = { exams: JSON.parse(JSON.stringify(BASE_EXAMS)) };
+    localStorage.setItem(SK, JSON.stringify(d));
+    cloudPush(d);
+  }
+  return d;
+}
+
+function saveData(d) {
+  acquireSyncLock(); 
+  localStorage.setItem(SK, JSON.stringify(d));
+  updateSyncBadge('saving');
+  cloudPush(d);
+}
+
+function cloudPush(d) {
+  if (!window.firebaseDB) return;
+  window.firebaseDB.ref('examhub/data').set(d)
+    .then(() => { releaseSyncLock(); updateSyncBadge('synced'); })
+    .catch(err => {
+      releaseSyncLock();
+      updateSyncBadge('error');
+    });
+}
+
+function loadStaff() {
+  try { return JSON.parse(localStorage.getItem(STK)) || ["Lead Invigilator (Assistant)"]; } catch(e) { return ["Lead Invigilator (Assistant)"]; }
+}
+function saveStaff(s) {
+  localStorage.setItem(STK, JSON.stringify(s));
+  if (window.firebaseDB) window.firebaseDB.ref('examhub/staff').set(s).catch(()=>{});
+}
+
+function updateSyncBadge(state) {
+  const b = document.getElementById('sync-badge');
+  if (!b) return;
+  const MAP = { synced:'✅ Synced', saving:'⬆️ Saving…', error:'⚠️ Offline', offline:'⏳ Loading…' };
+  b.className = 'badge ' + state;
+  b.id = 'sync-badge';
+  b.textContent = MAP[state] || state;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CALCULATIONS (FIXED: POOLED BY SUBJECT)
+// ═══════════════════════════════════════════════════════
+const getStaffNeeded = n => Math.max(1, Math.ceil(n / 30));
+
+function getDailyStaff(examsArr) {
+  const timeSlots = {};
+  examsArr.forEach(e => {
+    if (!timeSlots[e.time]) timeSlots[e.time] = {};
     
-    // -------------------------------------------------------------
-    // PASTE YOUR FIREBASE CONFIG HERE:
-    // (You get this exact block from the Firebase Console when you add a Web App)
-    // -------------------------------------------------------------
-    // Your web app's Firebase configuration
+    // Group purely by SUBJECT (merges all centers taking this exact paper)
+    const key = e.subject.trim().toUpperCase(); 
+    
+    if (!timeSlots[e.time][key]) timeSlots[e.time][key] = { cands:0, manualMax:0 };
+    
+    timeSlots[e.time][key].cands += e.candidates + (e.ext_nlt||0) + (e.ext_jp||0);
+    
+    if ((e.manual_staff||0) > timeSlots[e.time][key].manualMax) {
+        timeSlots[e.time][key].manualMax = e.manual_staff;
+    }
+  });
+  
+  let peak = 0;
+  for (const t in timeSlots) {
+    let sum = 0;
+    for (const key in timeSlots[t]) {
+      const data = timeSlots[t][key];
+      sum += Math.max(Math.ceil(data.cands/30), data.manualMax||1, 1);
+    }
+    if (sum > peak) peak = sum;
+  }
+  return peak;
+}
+
+// ═══════════════════════════════════════════════════════
+//  FIREBASE INIT
+// ═══════════════════════════════════════════════════════
+(function loadFirebase() {
+  const s1 = document.createElement('script');
+  s1.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
+  const s2 = document.createElement('script');
+  s2.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js';
+  s2.onload = initFirebase;
+  s2.onerror = () => { updateSyncBadge('error'); };
+  document.head.appendChild(s1);
+  document.head.appendChild(s2);
+})();
+
+function initFirebase() {
   const firebaseConfig = {
-    apiKey: "AIzaSyAmx4lksb2dQa44eEt9A2cfWpTL3-0-5WM",
-    authDomain: "examadminhub.firebaseapp.com",
-    projectId: "examadminhub",
-    storageBucket: "examadminhub.firebasestorage.app",
+    apiKey:            "AIzaSyAmx4lksb2dQa44eEt9A2cfWpTL3-0-5WM",
+    authDomain:        "examadminhub.firebaseapp.com",
+    databaseURL:       "https://examadminhub-default-rtdb.firebaseio.com",
+    projectId:         "examadminhub",
+    storageBucket:     "examadminhub.firebasestorage.app",
     messagingSenderId: "58843474683",
-    appId: "1:58843474683:web:b980a5508762e4762d9e5e"
+    appId:             "1:58843474683:web:b980a5508762e4762d9e5e"
   };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    // 3. LIVE LISTENERS (Syncs cloud data to local storage instantly)
-    db.ref('examhub/data').on('value', (snapshot) => {
-        const val = snapshot.val();
-        if (val) {
-            localStorage.setItem(SK, JSON.stringify(val));
-            // Auto-refresh the UI if we receive new data
-            if(document.getElementById('panel-dashboard').classList.contains('active')) renderDashboard();
-            if(document.getElementById('panel-schedule').classList.contains('active')) renderAllExams();
-            if(document.getElementById('panel-staff').classList.contains('active')) renderStaff();
-            if(document.getElementById('panel-reports').classList.contains('active')) { populateReportFilters(); renderReports(); }
-            if(document.getElementById('panel-recruitment').classList.contains('active')) renderRecruitment();
-        }
-    });
-
-    db.ref('examhub/staff').on('value', (snapshot) => {
-        const val = snapshot.val();
-        if (val) {
-            localStorage.setItem(STK, JSON.stringify(val));
-            if(document.getElementById('panel-staff').classList.contains('active')) renderStaff();
-            if(document.getElementById('panel-reports').classList.contains('active')) populateReportFilters();
-        }
-    });
-
-    // Make db available globally for the save functions
     window.firebaseDB = db;
-};
 
-// 4. THE NEW LOAD/SAVE FUNCTIONS (Hybrid Local + Cloud)
+    db.ref('examhub/data').on('value', snap => {
+      if (_syncLock) return;
+      const val = snap.val();
+      if (val && val.exams) {
+        localStorage.setItem(SK, JSON.stringify(val));
+        refreshActivePanel();
+        updateSyncBadge('synced');
+      }
+    }, err => { updateSyncBadge('error'); });
 
-function loadData() { 
-    let d = JSON.parse(localStorage.getItem(SK)); 
-    // If local storage is empty, initialize with BASE_EXAMS
-    if (!d || !d.exams || !d.exams.length) { 
-        d = { exams: BASE_EXAMS }; 
-        saveData(d); 
-    } 
-    return d; 
-}
+    db.ref('examhub/staff').on('value', snap => {
+      if (_syncLock) return;
+      const val = snap.val();
+      if (Array.isArray(val)) {
+        localStorage.setItem(STK, JSON.stringify(val));
+        if (document.getElementById('panel-staff').classList.contains('active')) renderStaff();
+        if (document.getElementById('panel-reports').classList.contains('active')) populateReportFilters();
+      }
+    });
 
-function saveData(d) { 
-    // Save locally for instant UI response
-    localStorage.setItem(SK, JSON.stringify(d)); 
-    // Push silently to the cloud (if Firebase is loaded)
-    if(window.firebaseDB) {
-        window.firebaseDB.ref('examhub/data').set(d); 
-    }
-}
+    db.ref('.info/connected').on('value', snap => {
+      updateSyncBadge(snap.val() ? 'synced' : 'error');
+    });
 
-function loadStaff() { 
-    return JSON.parse(localStorage.getItem(STK)) || ["Lead Invigilator (Assistant)"]; 
-}
-
-function saveStaff(s) { 
-    localStorage.setItem(STK, JSON.stringify(s)); 
-    if(window.firebaseDB) {
-        window.firebaseDB.ref('examhub/staff').set(s); 
-    }
-}
-
-// --- FIREBASE LIVE SYNC ENGINE END --- //
-
-function renderDashboard() {
-  const d = loadData(), t = todayStr(), filter = document.getElementById('dash-week-filter').value;
-  let up = d.exams.filter(e => e.date >= t).sort((a,b) => a.date.localeCompare(b.date));
-
-  if (filter !== 'all') {
-    const weeks = {"1":["2026-05-04","2026-05-08"],"2":["2026-05-11","2026-05-15"],"3":["2026-05-18","2026-05-22"],"4":["2026-05-25","2026-05-29"],"5":["2026-06-01","2026-06-05"],"6":["2026-06-08","2026-06-12"],"7":["2026-06-15","2026-06-16"]};
-    if(weeks[filter]) up = d.exams.filter(e => e.date >= weeks[filter][0] && e.date <= weeks[filter][1]);
+  } catch(err) {
+    updateSyncBadge('error');
   }
+}
 
-  const nextDay = up.filter(e => e.date === up[0]?.date);
-  const staffCount = getDailyStaff(nextDay);
+function refreshActivePanel() {
+  if (document.getElementById('panel-dashboard').classList.contains('active')) renderDashboard();
+  else if (document.getElementById('panel-schedule').classList.contains('active')) renderAllExams();
+  else if (document.getElementById('panel-staff').classList.contains('active')) renderStaff();
+  else if (document.getElementById('panel-reports').classList.contains('active')) { populateReportFilters(); renderReports(); }
+  else if (document.getElementById('panel-recruitment').classList.contains('active')) renderRecruitment();
+}
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════
+function renderDashboard() {
+  const d = loadData(), t = todayStr();
+  const filter = document.getElementById('dash-week-filter').value;
+  const WEEKS = {
+    "1":["2026-05-04","2026-05-08"],"2":["2026-05-11","2026-05-15"],
+    "3":["2026-05-18","2026-05-22"],"4":["2026-05-25","2026-05-29"],
+    "5":["2026-06-01","2026-06-05"],"6":["2026-06-08","2026-06-12"],
+    "7":["2026-06-15","2026-06-19"]
+  };
+
+  let up;
+  if (filter !== 'all' && WEEKS[filter]) {
+    up = d.exams.filter(e => e.date >= WEEKS[filter][0] && e.date <= WEEKS[filter][1]);
+  } else {
+    up = d.exams.filter(e => e.date >= t);
+  }
+  up.sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+
+  const nextDayExams = up.filter(e => e.date === up[0]?.date);
+  const staffNeeded  = getDailyStaff(nextDayExams);
+  const isDark       = document.documentElement.hasAttribute('data-theme');
 
   document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card blue"><div class="stat-value">${up.length}</div><div class="stat-label">Total Future Sessions</div></div>
-    <div class="stat-card green"><div class="stat-value">${staffCount}</div><div class="stat-label">Peak Staff Needed</div></div>
-    <div class="stat-card amber"><div class="stat-value">${Math.max(0, staffCount - 1)}</div><div class="stat-label">Additional Teachers</div></div>`;
+    <div class="stat-card blue">
+      <div class="stat-value">${up.length}</div>
+      <div class="stat-label">Future Sessions</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-value">${staffNeeded}</div>
+      <div class="stat-label">Peak Staff Needed</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-value">${Math.max(0, staffNeeded-1)}</div>
+      <div class="stat-label">Additional Teachers</div>
+    </div>`;
 
-  let html = '';
   const grouped = {};
   up.forEach(e => { if(!grouped[e.date]) grouped[e.date]=[]; grouped[e.date].push(e); });
-  
-  Object.keys(grouped).forEach(date => {
+
+  let html = '';
+  Object.keys(grouped).sort().forEach(date => {
+    const isToday = date === t;
     html += `<div class="date-group">
       <div class="date-gate-trigger" onclick="openGate('${date}')">
-        <span>${fmtDate(date)}${date===t?' <span class="today-badge">Today</span>':''}</span>
-        <span style="opacity:0.6">GATE SUMMARY ➔</span>
+        <span style="${isToday?'color:var(--green-mid);font-size:12px':''}">${fmtDate(date)}${isToday?' 🟢 TODAY':''}</span>
+        <span style="opacity:.55;font-size:10px">TAP FOR GATE SUMMARY ➔</span>
       </div>
       <div class="exam-list">`;
+
     grouped[date].forEach(e => {
-      const c = subjColor(e.subject), dk = document.documentElement.hasAttribute('data-theme');
-      let manualFlag = e.manual_staff ? `<span style="color:var(--amber); margin-left:5px">(*Manual: ${e.manual_staff})</span>` : '';
-      let staffFlag = e.assigned && e.assigned.length ? `<span style="color:var(--blue); font-weight:600; margin-left:5px">[👥 ${e.assigned.join(', ')}]</span>` : '';
-      
-      html += `<div class="exam-card" style="background:${dk?c.dbg:c.bg}; border-color:${dk?c.dark:c.mid}44">
+      const c = subjColor(e.subject);
+      const totalCands = e.candidates + (e.ext_nlt||0) + (e.ext_jp||0);
+      const manualFlag = e.manual_staff ? `<span style="color:var(--amber);margin-left:4px">*Manual:${e.manual_staff}</span>` : '';
+      const staffFlag  = e.assigned?.length ? `<span style="color:var(--blue-mid);margin-left:4px">👥 ${e.assigned.join(', ')}</span>` : '';
+      const centerBadge = centerBadgeHTML(e.center);
+
+      html += `<div class="exam-card" style="background:${isDark?c.dbg:c.bg};border-color:${isDark?c.dark:c.mid}44">
         <div class="exam-card-inner">
-          <div><div class="exam-subject" style="color:${dk?c.dark:c.mid}">${e.subject}</div>
-          <div class="exam-meta" style="color:${dk?c.dark:c.mid}"><span>${e.room}</span><span class="slot-pill">${e.time.includes('Morning')?'AM':'PM'}</span><span style="font-size:10px;opacity:0.8">[${e.center}]</span>${manualFlag}${staffFlag}</div></div>
-          <div class="exam-right" style="color:${dk?c.dark:c.mid}"><div class="exam-count">${e.candidates + (e.ext_nlt||0) + (e.ext_jp||0)}</div></div>
+          <div>
+            <div class="exam-subject" style="color:${isDark?c.dark:c.mid}">${e.subject}</div>
+            <div class="exam-meta" style="color:${isDark?c.dark:c.mid}">
+              <span>${e.room}</span>
+              <span class="slot-pill">${e.time.includes('Morning')?'AM':'PM'}</span>
+              ${centerBadge}
+              ${manualFlag}${staffFlag}
+            </div>
+          </div>
+          <div class="exam-count" style="color:${isDark?c.dark:c.mid}">${totalCands}</div>
         </div>
       </div>`;
     });
     html += '</div></div>';
   });
-  document.getElementById('exam-list-container').innerHTML = html || '<div class="empty-state" style="padding:40px; text-align:center">No scheduled exams for selected view</div>';
+
+  document.getElementById('exam-list-container').innerHTML = html ||
+    `<div class="empty-state">No scheduled exams for the selected period.</div>`;
 
   let rem = '';
-  if (t >= "2026-05-04" && t <= "2026-05-22") {
-    rem += `<div class="alert alert-info">🎨 <b>Visual Arts:</b> May 4-22 Production Period (3 Candidates).</div>`;
-  }
-  const todayExams = d.exams.filter(e => e.date === t);
-  todayExams.forEach(e => {
-      const searchString = e.subject + ' ' + (e.notes||'') + ' ' + (e.room||'');
-      if (AUX_REGEX.test(searchString)) {
-          rem += `<div class="alert alert-today">🔬 <b>${e.subject}:</b> Auxiliary technical/specialized setup required today.</div>`;
-      }
-  });
+  if (t >= "2026-05-04" && t <= "2026-05-22")
+    rem += `<div style="padding:10px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:12px;margin-bottom:8px">🎨 <b>Visual Arts:</b> May 4–22 Production Period (3 Candidates)</div>`;
   document.getElementById('reminders-container').innerHTML = rem;
 }
 
+// ═══════════════════════════════════════════════════════
+//  GATE MODAL
+// ═══════════════════════════════════════════════════════
 function openGate(date) {
-    const day = loadData().exams.filter(e => e.date === date);
-    const cands = day.reduce((s,e) => s + e.candidates + (e.ext_nlt||0) + (e.ext_jp||0), 0);
-    const staff = getDailyStaff(day);
-    
-    const roomsSet = new Set(day.map(e => {
-        const searchString = e.subject + ' ' + (e.notes||'') + ' ' + (e.room||'');
-        if (AUX_REGEX.test(searchString)) {
-            return "Auxiliary: " + ((e.room && e.room !== "TBD") ? e.room : e.subject);
-        }
-        return "Main Hall Pool";
-    }));
-    const rooms = roomsSet.size;
-    
-    const eb = day.filter(e=>e.center==='Enid Bennett').reduce((s,e)=>s+e.candidates,0);
-    const nlt = day.reduce((s,e)=>s+(e.ext_nlt||0),0) + day.filter(e=>e.center==='100658').reduce((s,e)=>s+e.candidates,0);
-    const jp = day.reduce((s,e)=>s+(e.ext_jp||0),0) + day.filter(e=>e.center==='100427').reduce((s,e)=>s+e.candidates,0);
+  const day   = loadData().exams.filter(e => e.date === date);
+  const cands = day.reduce((s,e) => s + e.candidates + (e.ext_nlt||0) + (e.ext_jp||0), 0);
+  const staff = getDailyStaff(day);
 
-    document.getElementById('modal-date-title').textContent = fmtDate(date);
-    document.getElementById('modal-stats-content').innerHTML = `
-        <div class="modal-stat-row"><span>Total Candidates Hosted</span><b>${cands}</b></div>
-        <div class="modal-stat-row"><span>Peak Invigilators Needed</span><b>${staff}</b></div>
-        <div class="modal-stat-row" style="color:var(--green)"><span>Lead Assistant (Base Staff)</span><b>1</b></div>
-        <div class="modal-stat-row" style="color:var(--amber)"><span>Additional Teachers Needed</span><b>${Math.max(0, staff - 1)}</b></div>
-        <div class="modal-stat-row"><span>Distinct Physical Spaces</span><b>${rooms}</b></div>
-        <div style="margin-top:15px; border-top:1px solid var(--border); padding-top:10px">
-            <div class="modal-stat-row" style="border:none; margin-bottom:5px"><span>Enid Bennett (Base)</span><b>${eb}</b></div>
-            <div class="modal-stat-row" style="border:none; margin-bottom:5px; color:var(--blue)"><span>NLT (100658)</span><b>${nlt}</b></div>
-            <div class="modal-stat-row" style="border:none; color:var(--purple)"><span>JP (100427)</span><b>${jp}</b></div>
-        </div>
-    `;
-    document.getElementById('gate-modal').style.display = 'flex';
+  // Subjects running during this day
+  const uniqueSubjects = new Set(day.map(e => e.subject.trim().toUpperCase())).size;
+
+  const eb  = day.filter(e=>e.center==='Enid Bennett').reduce((s,e)=>s+e.candidates,0);
+  const nlt = day.filter(e=>e.center==='100658').reduce((s,e)=>s+e.candidates,0)  + day.reduce((s,e)=>s+(e.ext_nlt||0),0);
+  const jp  = day.filter(e=>e.center==='100427').reduce((s,e)=>s+e.candidates,0)  + day.reduce((s,e)=>s+(e.ext_jp||0),0);
+
+  document.getElementById('modal-date-title').textContent = '📅 ' + fmtDate(date);
+  document.getElementById('modal-stats-content').innerHTML = `
+    <div class="modal-stat-row"><span>Total Candidates Hosted</span><b>${cands}</b></div>
+    <div class="modal-stat-row"><span>Peak Invigilators Required</span><b>${staff}</b></div>
+    <div class="modal-stat-row" style="color:var(--green-mid)"><span>↳ Lead Assistant (base)</span><b>1</b></div>
+    <div class="modal-stat-row" style="color:var(--amber)"><span>↳ Additional Teachers Needed</span><b>${Math.max(0,staff-1)}</b></div>
+    <div class="modal-stat-row"><span>Distinct Subjects Hosted</span><b>${uniqueSubjects}</b></div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)">
+      <div class="modal-stat-row" style="border:none;margin-bottom:4px"><span>🏫 Enid Bennett (Home)</span><b>${eb}</b></div>
+      <div class="modal-stat-row" style="border:none;margin-bottom:4px;color:var(--blue)"><span>📍 NLT — 100658</span><b>${nlt}</b></div>
+      <div class="modal-stat-row" style="border:none;color:var(--purple-mid)"><span>📍 JP — 100427</span><b>${jp}</b></div>
+    </div>`;
+  document.getElementById('gate-modal').style.display = 'flex';
 }
 
+// ═══════════════════════════════════════════════════════
+//  SCHEDULE — ALL EXAMS
+// ═══════════════════════════════════════════════════════
 function renderAllExams() {
-  const d = loadData(); 
-  let html = '';
-  
-  // Apply Search Filter Logic
-  const filterInput = document.getElementById('schedule-filter');
-  const filterTerm = filterInput ? filterInput.value.toLowerCase() : '';
+  const d    = loadData();
+  const term = (document.getElementById('schedule-filter')?.value || '').toLowerCase();
+  let   list = d.exams.sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  if (term) list = list.filter(e =>
+    e.subject.toLowerCase().includes(term) ||
+    e.room.toLowerCase().includes(term) ||
+    e.center.toLowerCase().includes(term) ||
+    (e.notes||'').toLowerCase().includes(term));
 
-  let examsToRender = d.exams;
-  if (filterTerm) {
-      examsToRender = examsToRender.filter(e => 
-          e.subject.toLowerCase().includes(filterTerm) ||
-          e.room.toLowerCase().includes(filterTerm) ||
-          e.center.toLowerCase().includes(filterTerm)
-      );
+  const countEl = document.getElementById('schedule-count');
+  if (countEl) countEl.textContent = `${list.length} exam${list.length!==1?'s':''} shown`;
+
+  if (!list.length) {
+    document.getElementById('all-exams-list').innerHTML =
+      `<div class="empty-state">${term ? `No exams match "${term}".` : 'No exams scheduled yet.'}</div>`;
+    return;
   }
 
-  examsToRender.sort((a,b) => a.date.localeCompare(b.date)).forEach(e => {
-    const c = subjColor(e.subject);
-    html += `<div class="exam-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border)">
+  let html = '';
+  list.forEach(e => {
+    const c     = subjColor(e.subject);
+    const total = e.candidates + (e.ext_nlt||0) + (e.ext_jp||0);
+    html += `<div class="exam-row" id="row-${e.id}">
       <div class="exam-row-dot" style="background:${c.mid}"></div>
-      <div style="flex:1">
-        <b>${e.subject}</b><br>
-        <small>${fmtDate(e.date)} · ${e.candidates} Candidates [${e.center}] · Room: ${e.room}</small>
-        ${e.manual_staff ? `<br><small style="color:var(--amber)">*Manual Override: ${e.manual_staff} Staff*</small>` : ''}
-        ${e.assigned && e.assigned.length ? `<br><small style="color:var(--blue)">👥 ${e.assigned.join(', ')}</small>` : ''}
+      <div style="flex:1;min-width:0">
+        <b>${e.subject}</b>
+        <span style="margin-left:6px">${centerBadgeHTML(e.center)}</span><br>
+        <small style="color:var(--text-2)">${fmtDate(e.date)} · ${e.time.includes('Morning')?'AM':'PM'} · ${total} cands · Room: ${e.room}</small>
+        ${e.manual_staff ? `<br><small style="color:var(--amber)">*Manual override: ${e.manual_staff} staff*</small>`:''}
+        ${e.ext_nlt||e.ext_jp ? `<br><small style="color:var(--purple-mid)">External: NLT +${e.ext_nlt||0} · JP +${e.ext_jp||0}</small>`:''}
+        ${e.assigned?.length ? `<br><small style="color:var(--blue-mid)">👥 ${e.assigned.join(', ')}</small>`:''}
       </div>
-      <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end">
-        <button class="btn-small" onclick="addExt(${e.id})">+ Ext</button>
-        <button class="btn-small" onclick="assignStaff(${e.id})">👥 Staff</button>
-        <button class="btn-small" onclick="editExam(${e.id})">✎ Edit</button>
-        <button class="btn-small" onclick="deleteExam(${e.id})" style="color:var(--red)">✕</button>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0">
+        <button class="btn-small" onclick="addExt(${e.id})">+Ext</button>
+        <button class="btn-small" onclick="assignStaff(${e.id})">👥</button>
+        <button class="btn-small" onclick="editExam(${e.id})">✎</button>
+        <button class="btn-small btn-danger" onclick="deleteExam(${e.id})">✕</button>
       </div>
     </div>`;
   });
-
-  // Empty state handling
-  if (examsToRender.length === 0) {
-      html = `<div style="padding:20px; text-align:center; color:var(--text-3); font-style:italic;">No exams match "${filterTerm}"</div>`;
-  }
-
   document.getElementById('all-exams-list').innerHTML = html;
 }
 
+// ═══════════════════════════════════════════════════════
+//  SAVE EXAM 
+// ═══════════════════════════════════════════════════════
+function saveExam() {
+  const subj    = document.getElementById('f-subject').value.trim();
+  const dateVal = document.getElementById('f-date').value;
+  const cands   = parseInt(document.getElementById('f-candidates').value) || 0;
+  const center  = document.getElementById('f-center').value;
+  const room    = document.getElementById('f-room').value.trim() || 'TBD';
+  const time    = document.getElementById('f-time').value;
+  const notes   = document.getElementById('f-notes').value.trim();
+
+  if (!subj)    { showToast('⚠️ Subject is required', 'warn'); document.getElementById('f-subject').focus(); return; }
+  if (!dateVal) { showToast('⚠️ Date is required', 'warn'); document.getElementById('f-date').focus(); return; }
+  if (cands < 1){ showToast('⚠️ Candidates must be ≥ 1', 'warn'); document.getElementById('f-candidates').focus(); return; }
+
+  const newExam = {
+    id: Date.now(),
+    subject: subj,
+    center: center,
+    date: dateVal,
+    time: time,
+    room: room,
+    candidates: cands,
+    notes: notes || undefined
+  };
+
+  const dat = loadData();
+  dat.exams.push(newExam);
+  saveData(dat);
+
+  document.getElementById('f-subject').value    = '';
+  document.getElementById('f-room').value       = '';
+  document.getElementById('f-notes').value      = '';
+  document.getElementById('f-candidates').value = '10';
+
+  renderAllExams();
+  document.getElementById('success-modal').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════
+//  EDIT / DELETE / EXT / ASSIGN
+// ═══════════════════════════════════════════════════════
 function editExam(id) {
-    const d = loadData();
-    const e = d.exams.find(x => x.id === id);
-    if (!e) return;
+  const d = loadData(), e = d.exams.find(x => x.id === id);
+  if (!e) return;
+  const newRoom  = prompt('Room (current: '+e.room+'):', e.room);          if (newRoom  === null) return;
+  const newCands = prompt('Candidates (current: '+e.candidates+'):', e.candidates); if (newCands === null) return;
+  const total    = parseInt(newCands||0) + (e.ext_nlt||0) + (e.ext_jp||0);
+  const auto     = Math.max(1, Math.ceil(total/30));
+  const manual   = prompt('Invigilators needed\n(Auto = '+auto+' based on 1:30 ratio)\nEnter to keep auto:', e.manual_staff || '');
+  if (manual === null) return;
 
-    const newRoom = prompt("Assign Room (Current: " + e.room + "):", e.room);
-    if (newRoom === null) return;
+  e.room = newRoom.trim() || 'TBD';
+  e.candidates = parseInt(newCands)||0;
+  const mv = parseInt(manual);
+  if (!isNaN(mv) && mv !== auto) e.manual_staff = mv;
+  else delete e.manual_staff;
 
-    const newCands = prompt("EB Candidates (Current: " + e.candidates + "):", e.candidates);
-    if (newCands === null) return;
-
-    const currentTotal = parseInt(newCands) + (e.ext_nlt||0) + (e.ext_jp||0);
-    const autoInv = Math.max(1, Math.ceil(currentTotal / 30));
-    
-    const manualInv = prompt("Invigilators Needed\n(Auto-calculated based on 1:30 ratio is " + autoInv + ". Enter a different number to manually override):", e.manual_staff || autoInv);
-    if (manualInv === null) return;
-
-    e.room = newRoom.trim() || "TBD";
-    e.candidates = parseInt(newCands) || 0;
-    
-    if (parseInt(manualInv) !== autoInv) {
-        e.manual_staff = parseInt(manualInv);
-    } else {
-        delete e.manual_staff; 
-    }
-
-    saveData(d); renderAllExams(); renderDashboard(); showToast("Exam Updated");
+  saveData(d);
+  renderAllExams();
+  renderDashboard();
+  showToast('✅ Exam updated', 'success');
 }
 
 function addExt(id) {
-  const d = loadData(); const e = d.exams.find(x => x.id === id);
-  const nlt = parseInt(prompt("NLT (100658):", e.ext_nlt || 0)) || 0;
-  const jp = parseInt(prompt("JP (100427):", e.ext_jp || 0)) || 0;
-  e.ext_nlt = nlt; e.ext_jp = jp;
-  saveData(d); renderAllExams(); renderDashboard();
+  const d = loadData(), e = d.exams.find(x => x.id === id);
+  if (!e) return;
+  const nlt = prompt('NLT (100658) external candidates:', e.ext_nlt||0);  if (nlt===null) return;
+  const jp  = prompt('JP (100427) external candidates:', e.ext_jp||0);    if (jp===null)  return;
+  e.ext_nlt = parseInt(nlt)||0;
+  e.ext_jp  = parseInt(jp)||0;
+  saveData(d);
+  renderAllExams();
+  renderDashboard();
+  showToast('✅ External counts updated', 'success');
 }
 
-function saveExam(){ 
-  const s=document.getElementById('f-subject').value, d=document.getElementById('f-date').value, c=parseInt(document.getElementById('f-candidates').value); 
-  if(!s||!d) { showToast("Subject and Date required"); return; }
-  const dat=loadData(); 
-  dat.exams.push({id:Date.now(), subject:s, center:document.getElementById('f-center').value, date:d, room:document.getElementById('f-room').value||"TBD", time:document.getElementById('f-time').value, candidates:c}); 
-  saveData(dat); showPanel('dashboard'); showToast("Added to Roster"); 
+function deleteExam(id) {
+  const d = loadData(), e = d.exams.find(x => x.id === id);
+  if (!e) return;
+  if (!confirm(`Delete "${e.subject}" on ${fmtDate(e.date)}?\n\nThis cannot be undone.`)) return;
+  d.exams = d.exams.filter(x => x.id !== id);
+  saveData(d);
+  renderAllExams();
+  renderDashboard();
+  showToast('🗑️ Exam removed', 'info');
 }
-function deleteExam(id){ const d=loadData(); d.exams=d.exams.filter(x=>x.id!==id); saveData(d); renderAllExams(); renderDashboard(); }
 
 function assignStaff(id) {
-  const d = loadData(); const e = d.exams.find(x => x.id === id); const roster = loadStaff();
-  const chosen = prompt("Assign Staff (comma separated):\n" + roster.join(", "), (e.assigned||[]).join(", "));
-  if (chosen !== null) { e.assigned = chosen.split(",").map(s => s.trim()).filter(s => s !== ""); saveData(d); renderStaff(); renderAllExams(); renderDashboard(); }
+  const d = loadData(), e = d.exams.find(x => x.id === id), roster = loadStaff();
+  if (!e) return;
+  const chosen = prompt('Assign invigilators (comma-separated).\nRoster: '+roster.join(', '), (e.assigned||[]).join(', '));
+  if (chosen === null) return;
+  e.assigned = chosen.split(',').map(s=>s.trim()).filter(Boolean);
+  saveData(d);
+  renderAllExams();
+  renderDashboard();
+  showToast('👥 Staff assigned', 'info');
 }
 
+// ═══════════════════════════════════════════════════════
+//  STAFF
+// ═══════════════════════════════════════════════════════
 function renderStaff() {
-  const roster = loadStaff(), d = loadData(); let listHtml = '', statHtml = '';
-  
-  roster.forEach(name => {
-    const sessWorked = new Set();
-    d.exams.filter(e => e.assigned?.includes(name)).forEach(e => {
-        sessWorked.add(e.date + '|' + e.time);
-    });
-    
-    const distinctDays = new Set(Array.from(sessWorked).map(s => s.split('|')[0])).size;
-    const totalSessions = sessWorked.size;
+  const roster = loadStaff(), d = loadData();
+  let listHtml = '', statHtml = '';
 
-    listHtml += `<div class="exam-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border)">
-        <div style="display:flex; align-items:center; gap:8px; flex:1;">
-            <div class="exam-row-dot" style="background:var(--blue-mid)"></div>
-            <span style="font-weight:500">${name}</span>
-        </div>
-        <div style="display:flex; gap:5px;">
-            <button class="btn-small" onclick="printStaffSchedule('${name}')">🖨️ Schedule</button>
-            <button class="btn-small" onclick="removeStaff('${name}')" style="color:var(--red)">✕</button>
-        </div>
+  roster.forEach(name => {
+    const sessions = new Set();
+    d.exams.filter(e => e.assigned?.includes(name)).forEach(e => sessions.add(e.date+'|'+e.time));
+    const days     = new Set(Array.from(sessions).map(s=>s.split('|')[0])).size;
+    const sessCount= sessions.size;
+
+    listHtml += `<div class="exam-row">
+      <div class="exam-row-dot" style="background:var(--blue-mid)"></div>
+      <span style="font-weight:500;flex:1">${name}</span>
+      <div style="display:flex;gap:4px">
+        <button class="btn-small" onclick="printStaffSchedule('${name.replace(/'/g,"\\'")}')">🖨️</button>
+        <button class="btn-small btn-danger" onclick="removeStaff('${name.replace(/'/g,"\\'")}')">✕</button>
+      </div>
     </div>`;
-    
-    statHtml += `<div class="exam-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border)">
-        <b>${name}</b><span>${distinctDays} Days | ${totalSessions} Sessions Worked</span>
+
+    statHtml += `<div class="exam-row">
+      <b style="flex:1">${name}</b>
+      <span style="color:var(--text-2);font-size:12px">${days} day${days!==1?'s':''} · ${sessCount} session${sessCount!==1?'s':''}</span>
     </div>`;
   });
-  document.getElementById('staff-list').innerHTML = listHtml; document.getElementById('staff-stats').innerHTML = statHtml;
+
+  if (!roster.length) {
+    listHtml = `<div class="empty-state">No staff added yet.</div>`;
+    statHtml = '';
+  }
+  document.getElementById('staff-list').innerHTML  = listHtml;
+  document.getElementById('staff-stats').innerHTML = statHtml;
 }
 
-function addStaff(){ const n=document.getElementById('new-staff-name').value.trim(); if(n){const s=loadStaff(); if(!s.includes(n)) s.push(n); saveStaff(s); renderStaff(); document.getElementById('new-staff-name').value='';}}
-function removeStaff(n){ const s=loadStaff().filter(x=>x!==n); saveStaff(s); renderStaff(); }
+function addStaff() {
+  const n = document.getElementById('new-staff-name').value.trim();
+  if (!n) return;
+  const s = loadStaff();
+  if (s.includes(n)) { showToast('⚠️ Already on roster', 'warn'); return; }
+  s.push(n);
+  saveStaff(s);
+  renderStaff();
+  document.getElementById('new-staff-name').value = '';
+  showToast('✅ '+n+' added to roster', 'success');
+}
+
+function removeStaff(n) {
+  if (!confirm(`Remove ${n} from the roster?`)) return;
+  saveStaff(loadStaff().filter(x => x!==n));
+  renderStaff();
+  showToast('🗑️ '+n+' removed', 'info');
+}
 
 function printStaffSchedule(staffName) {
-    const d = loadData();
-    const myExams = d.exams.filter(e => e.assigned?.includes(staffName)).sort((a,b) => a.date.localeCompare(b.date));
-    
-    let html = `<html><head><title>${staffName} - Invigilation Schedule</title>
-    <style>
-        body { font-family: sans-serif; padding: 30px; color: #000; max-width: 800px; margin: 0 auto; line-height: 1.5; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-        th, td { border: 1px solid #aaa; padding: 12px; text-align: left; }
-        th { background: #f4f4f4; }
-        h2 { margin-bottom: 5px; }
-    </style></head><body>
-    <h2>Invigilation Schedule: ${staffName}</h2>
-    <p>Generated on: ${fmtDate(todayStr())}</p>
-    <table>
-    <tr><th>Date</th><th>Time Slot</th><th>Subject(s)</th><th>Room Assignment</th></tr>`;
-
-    if (myExams.length === 0) {
-        html += `<tr><td colspan="4" style="text-align:center; padding:20px;">No sessions assigned yet.</td></tr>`;
-    } else {
-        myExams.forEach(e => {
-            html += `<tr>
-                <td>${fmtDate(e.date)}</td>
-                <td>${e.time}</td>
-                <td>${e.subject}</td>
-                <td>${e.room}</td>
-            </tr>`;
-        });
-    }
-
-    html += `</table>
-    <div style="margin-top:30px; font-size:12px; color:#666;">Generated via Exam Admin Hub PRO</div>
-    <script>window.onload = function() { window.print(); }<\/script>
-    </body></html>`;
-
-    const printWin = window.open('', '_blank');
-    printWin.document.write(html);
-    printWin.document.close();
+  const d = loadData();
+  const myExams = d.exams.filter(e => e.assigned?.includes(staffName)).sort((a,b)=>a.date.localeCompare(b.date));
+  let html = `<html><head><title>${staffName} - Schedule</title>
+  <style>body{font-family:sans-serif;padding:30px;color:#000;max-width:800px;margin:0 auto}
+  table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px}
+  th,td{border:1px solid #aaa;padding:11px;text-align:left}th{background:#f4f4f4}</style></head><body>
+  <h2>Invigilation Schedule: ${staffName}</h2>
+  <p>Generated: ${fmtDate(todayStr())}</p>
+  <table><tr><th>Date</th><th>Session</th><th>Subject</th><th>Room</th></tr>`;
+  if (!myExams.length) {
+    html += `<tr><td colspan="4" style="text-align:center;padding:20px">No sessions assigned yet.</td></tr>`;
+  } else {
+    myExams.forEach(e => html += `<tr><td>${fmtDate(e.date)}</td><td>${e.time}</td><td>${e.subject}</td><td>${e.room}</td></tr>`);
+  }
+  html += `</table><script>window.onload=()=>window.print()<\/script></body></html>`;
+  const w = window.open('','_blank'); w.document.write(html); w.document.close();
 }
 
-// --- NEW REPORTING ENGINE START --- //
-
+// ═══════════════════════════════════════════════════════
+//  REPORTS (FIXED: POOLED BY SUBJECT)
+// ═══════════════════════════════════════════════════════
 function populateReportFilters() {
-    const staff = loadStaff();
-    const select = document.getElementById('rep-invig');
-    if(!select) return;
-    let html = '<option value="all">All Staff</option>';
-    staff.forEach(s => html += `<option value="${s}">${s}</option>`);
-    select.innerHTML = html;
+  const select = document.getElementById('rep-invig');
+  if (!select) return;
+  const staff = loadStaff();
+  select.innerHTML = '<option value="all">All Staff</option>' +
+    staff.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+function renderReports() {
+  const start  = document.getElementById('rep-start').value;
+  const end    = document.getElementById('rep-end').value;
+  const center = document.getElementById('rep-center').value;
+  const subj   = document.getElementById('rep-subj').value.toLowerCase();
+  const invig  = document.getElementById('rep-invig').value;
+  const el     = document.getElementById('report-content');
+
+  let filtered = loadData().exams;
+  if (start)          filtered = filtered.filter(e=>e.date>=start);
+  if (end)            filtered = filtered.filter(e=>e.date<=end);
+  if (center!=='all') filtered = filtered.filter(e=>e.center===center);
+  if (subj)           filtered = filtered.filter(e=>e.subject.toLowerCase().includes(subj));
+  if (invig!=='all')  filtered = filtered.filter(e=>e.assigned?.includes(invig));
+
+  if (!filtered.length) { el.innerHTML = "<p class='empty-state'>No sessions match the filters.</p>"; return; }
+
+  filtered.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+
+  const byDate = {};
+  filtered.forEach(e => {
+    if (!byDate[e.date]) byDate[e.date] = { times:{}, totalCands:0 };
+    if (!byDate[e.date].times[e.time]) byDate[e.date].times[e.time] = { subjects:{} };
+    
+    // Group purely by SUBJECT
+    const subjKey = e.subject.trim();
+    
+    if (!byDate[e.date].times[e.time].subjects[subjKey]) {
+      byDate[e.date].times[e.time].subjects[subjKey] = {
+         cands:0, manualMax:0, rooms:new Set(), centers:new Set(), staffNames:new Set(),
+         isAux: AUX_REGEX.test(subjKey+' '+(e.notes||'')+' '+(e.room||''))
+      };
+    }
+      
+    const data = byDate[e.date].times[e.time].subjects[subjKey];
+    const cnt = e.candidates+(e.ext_nlt||0)+(e.ext_jp||0);
+    
+    data.cands += cnt;
+    byDate[e.date].totalCands += cnt;
+    data.rooms.add(e.room);
+    data.centers.add(e.center==='100658' ? 'NLT' : e.center==='100427' ? 'JP' : 'EB');
+    
+    if (e.assigned) e.assigned.forEach(n=>data.staffNames.add(n));
+    if ((e.manual_staff||0)>data.manualMax) data.manualMax = e.manual_staff;
+  });
+
+  let html = '';
+  for (const date in byDate) {
+    html += `<div style="background:var(--surface2);padding:10px 15px;border-radius:6px;font-weight:700;margin-top:25px;font-size:15px">
+      📅 ${fmtDate(date)} <span style="float:right;font-size:12px;font-weight:400">Day Total: ${byDate[date].totalCands} cands</span></div>`;
+    
+    for (const time in byDate[date].times) {
+      let slotStaff = 0;
+      for (const subj in byDate[date].times[time].subjects) {
+        const data = byDate[date].times[time].subjects[subj];
+        slotStaff += Math.max(Math.ceil(data.cands/30), data.manualMax||1, 1);
+      }
+      const extra = Math.max(0, slotStaff-1);
+      html += `<div style="margin-top:14px;padding-bottom:10px;border-bottom:2px solid var(--border)">
+        <b>${time} Session</b><br>
+        <span style="font-size:12px;color:var(--text-2)">
+          Staff Required: <b>${slotStaff}</b>
+          <span style="color:var(--green-mid)">(1 Lead Assistant)</span>
+          ${extra>0?`<span style="color:var(--amber)"> + (${extra} extra teacher${extra>1?'s':''})</span>`:''}
+        </span></div>`;
+        
+      for (const subj in byDate[date].times[time].subjects) {
+        const data    = byDate[date].times[time].subjects[subj];
+        const auto    = Math.max(1, Math.ceil(data.cands/30));
+        const final   = Math.max(auto, data.manualMax||1);
+        const assigned= Array.from(data.staffNames);
+        const centersArr = Array.from(data.centers).join(', ');
+        const roomsArr = Array.from(data.rooms).join(', ');
+
+        let rem = final + ' staff required. ';
+        if ((data.manualMax||0)>auto) rem += 'Manual override applied. ';
+        else if (data.cands>30)       rem += 'Extra teacher for 1:30 over-capacity. ';
+        if (data.isAux) rem += 'Auxiliary technical room — specialist setup required. ';
+        
+        html += `<div class="report-section" style="margin-top:14px">
+          <b>${subj}</b> ${data.isAux?'<span style="color:var(--amber);font-size:11px">[AUX]</span>':''}<br>
+          <small style="color:var(--text-2)">${data.cands} candidates | Centers: ${centersArr} | Rooms: ${roomsArr}</small><br>
+          <div style="font-size:12px;color:var(--blue-mid);margin:5px 0">👥 <b>Assigned:</b> ${assigned.length?assigned.join(', '):'<span style="color:var(--text-3);font-style:italic">None assigned</span>'}</div>
+          <div class="remarks-box"><b>Claim:</b> ${rem}</div>
+        </div>`;
+      }
+    }
+  }
+  el.innerHTML = html;
 }
 
 function printMasterReport() {
-    const content = document.getElementById('report-content').innerHTML;
-    if(!content || content.includes('No sessions match')) return showToast("There is nothing to print.");
-
-    let html = `<html><head><title>Official Logistics Master Report</title>
-    <style>
-        body { font-family: sans-serif; padding: 30px; color: #000; max-width: 800px; margin: 0 auto; line-height: 1.5; }
-        .report-section { border-left: 4px solid #3b82f6; padding-left: 15px; margin-bottom: 20px; margin-top: 15px; }
-        .remarks-box { background: #f4f4f4; padding: 12px; border-radius: 8px; font-style: italic; font-size: 13px; margin-top: 8px; border: 1px dashed #ccc; }
-        h2 { margin-bottom: 5px; }
-        .date-header { background: #eee; padding: 10px; font-weight: bold; margin-top: 30px; font-size: 16px; border-bottom: 2px solid #000; }
-    </style></head><body>
-    <h2>Official Logistics Master Report</h2>
-    <p style="font-size:13px; color:#555; border-bottom:1px solid #ccc; padding-bottom:15px;">Generated on: ${fmtDate(todayStr())}</p>
-    ${content}
-    <div style="margin-top:40px; border-top:1px solid #ccc; padding-top:20px;">
-        <p><b>Supervisor Signature:</b> ___________________________ &nbsp;&nbsp;&nbsp; <b>Date:</b> _________________</p>
-    </div>
-    <script>window.onload = function() { window.print(); }<\/script>
-    </body></html>`;
-
-    const printWin = window.open('', '_blank');
-    printWin.document.write(html);
-    printWin.document.close();
+  const content = document.getElementById('report-content').innerHTML;
+  if (!content || content.includes('No sessions match')) { showToast('Nothing to print', 'warn'); return; }
+  const w = window.open('','_blank');
+  w.document.write(`<html><head><title>Master Logistics Report</title>
+  <style>body{font-family:sans-serif;padding:30px;color:#000;max-width:800px;margin:0 auto;line-height:1.5}
+  .report-section{border-left:4px solid #3b82f6;padding-left:15px;margin-bottom:20px}
+  .remarks-box{background:#f4f4f4;padding:12px;border-radius:8px;font-style:italic;font-size:13px;margin-top:8px;border:1px dashed #ccc}</style></head><body>
+  <h2>Official Logistics Master Report</h2>
+  <p style="font-size:13px;color:#666;border-bottom:1px solid #ccc;padding-bottom:15px">Generated: ${fmtDate(todayStr())}</p>
+  ${content.replace(/var\(--[^)]+\)/g,'inherit').replace(/var\(--border\)/g,'#ccc')}
+  <div style="margin-top:40px;border-top:1px solid #ccc;padding-top:20px">
+    <p><b>Supervisor:</b> ___________________________ &nbsp;&nbsp; <b>Date:</b> _________________</p>
+  </div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
 }
-function printRecruitmentReport() {
-    const content = document.getElementById('recruitment-list').innerHTML;
-    const startInput = document.getElementById('recruit-start').value;
-    const endInput = document.getElementById('recruit-end').value;
-    
-    // Don't print if it's empty or fully staffed
-    if(!content || content.includes('fully staffed')) return showToast("There is no recruitment needed to print.");
 
-    // Format dates for the report header
-    const startDateForm = startInput ? fmtDate(startInput) : fmtDate(todayStr());
-    const endDateForm = endInput ? fmtDate(endInput) : "End of Schedule";
-
-    // Convert CSS variables to standard colors so it prints beautifully regardless of dark mode
-    let printSafeContent = content
-        .replace(/var\(--border\)/g, '#ccc')
-        .replace(/var\(--surface2\)/g, '#f9f9f9')
-        .replace(/var\(--text\)/g, '#000')
-        .replace(/var\(--amber\)/g, '#d97706')
-        .replace(/var\(--blue-mid\)/g, '#2563eb');
-
-    let html = `<html><head><title>Recruitment Needs Report</title>
-    <style>
-        body { font-family: sans-serif; padding: 30px; color: #000; max-width: 800px; margin: 0 auto; line-height: 1.5; }
-        h2 { margin-bottom: 5px; }
-    </style></head><body>
-    <h2>Action Required: Staffing Shortages</h2>
-    <p style="font-size:13px; color:#555; border-bottom:1px solid #ccc; padding-bottom:15px;">
-        <b>Period:</b> ${startDateForm} to ${endDateForm}<br>
-        <b>Generated on:</b> ${fmtDate(todayStr())}
-    </p>
-    <div style="margin-top: 20px;">
-        ${printSafeContent}
-    </div>
-    <div style="margin-top:40px; border-top:1px solid #ccc; padding-top:20px; font-size:12px; color:#666;">
-        Generated via Exam Admin Hub PRO
-    </div>
-    <script>window.onload = function() { window.print(); }<\/script>
-    </body></html>`;
-
-    const printWin = window.open('', '_blank');
-    printWin.document.write(html);
-    printWin.document.close();
-}
-  
-function renderReports() {
-    const start = document.getElementById('rep-start').value;
-    const end = document.getElementById('rep-end').value;
-    const center = document.getElementById('rep-center').value;
-    const subj = document.getElementById('rep-subj').value.toLowerCase();
-    const invig = document.getElementById('rep-invig').value;
-
-    let filtered = loadData().exams;
-
-    // 1. APPLY ALL ACTIVE FILTERS
-    if (start) filtered = filtered.filter(e => e.date >= start);
-    if (end) filtered = filtered.filter(e => e.date <= end);
-    if (center !== 'all') filtered = filtered.filter(e => e.center === center);
-    if (subj) filtered = filtered.filter(e => e.subject.toLowerCase().includes(subj));
-    if (invig !== 'all') filtered = filtered.filter(e => e.assigned && e.assigned.includes(invig));
-
-    let html = ``;
-
-    if (filtered.length === 0) {
-        document.getElementById('report-content').innerHTML = "<p style='text-align:center; padding:20px; color:var(--text-3)'>No sessions match your search criteria.</p>";
-        return;
-    }
-
-    // Sort chronologically before grouping
-    filtered.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
-
-    // 2. GROUP BY DATE -> THEN BY TIME -> THEN APPLY POOLING RULES
-    const groupedByDate = {};
-    filtered.forEach(e => {
-        if (!groupedByDate[e.date]) groupedByDate[e.date] = { times: {}, totalCands: 0 };
-        if (!groupedByDate[e.date].times[e.time]) groupedByDate[e.date].times[e.time] = { rooms: {} };
-        
-        const searchString = e.subject + ' ' + (e.notes||'') + ' ' + (e.room||'');
-        let roomKey = AUX_REGEX.test(searchString) ? "Auxiliary: " + ((e.room && e.room !== "TBD") ? e.room : e.subject) : "Main Hall Pool";
-        let isAux = AUX_REGEX.test(searchString);
-
-        if (!groupedByDate[e.date].times[e.time].rooms[roomKey]) {
-            groupedByDate[e.date].times[e.time].rooms[roomKey] = { cands: 0, manualMax: 0, subjects: [], isAux: isAux, centers: new Set(), staffNames: new Set() };
-        }
-        
-        const candCount = e.candidates + (e.ext_nlt||0) + (e.ext_jp||0);
-        groupedByDate[e.date].times[e.time].rooms[roomKey].cands += candCount;
-        groupedByDate[e.date].totalCands += candCount;
-        groupedByDate[e.date].times[e.time].rooms[roomKey].subjects.push(e.subject);
-        groupedByDate[e.date].times[e.time].rooms[roomKey].centers.add(e.center);
-        
-        if (e.assigned) e.assigned.forEach(name => groupedByDate[e.date].times[e.time].rooms[roomKey].staffNames.add(name));
-        if (e.manual_staff > groupedByDate[e.date].times[e.time].rooms[roomKey].manualMax) {
-            groupedByDate[e.date].times[e.time].rooms[roomKey].manualMax = e.manual_staff;
-        }
-    });
-
-    // 3. BUILD THE MULTI-DAY UI
-    for (const date in groupedByDate) {
-        html += `<div class="date-header" style="background:var(--surface2); padding:10px 15px; border-radius:6px; font-weight:700; margin-top:25px; color:var(--text); font-size:16px;">
-                    📅 ${fmtDate(date)} 
-                    <span style="float:right; font-size:13px; font-weight:normal;">Day Total: ${groupedByDate[date].totalCands} Cands</span>
-                 </div>`;
-
-        for (const time in groupedByDate[date].times) {
-            let sessionStaffNeeded = 0;
-            
-            for (const room in groupedByDate[date].times[time].rooms) {
-                const data = groupedByDate[date].times[time].rooms[room];
-                const autoInv = Math.max(1, Math.ceil(data.cands / 30));
-                sessionStaffNeeded += Math.max(autoInv, data.manualMax);
-            }
-
-            const additionalTeachers = Math.max(0, sessionStaffNeeded - 1);
-
-            html += `<div style="margin-top:15px; padding-bottom:10px; border-bottom:2px solid var(--border); font-size:15px;">
-                        <b>${time} Session</b><br>
-                        <span style="font-size:13px; color:var(--text-2)">
-                            Staff Required: <b>${sessionStaffNeeded}</b> 
-                            <span style="color:var(--green)">(1 Lead Assistant)</span> 
-                            ${additionalTeachers > 0 ? `<span style="color:var(--amber)">+ (${additionalTeachers} Additional Teacher${additionalTeachers > 1 ? 's' : ''})</span>` : ''}
-                        </span>
-                     </div>`;
-
-            for (const room in groupedByDate[date].times[time].rooms) {
-                const data = groupedByDate[date].times[time].rooms[room];
-                const autoInv = Math.max(1, Math.ceil(data.cands / 30));
-                const finalStaff = Math.max(autoInv, data.manualMax);
-                
-                let rem = "";
-                if (data.manualMax > autoInv) {
-                    rem += `${finalStaff} staff member(s) required (Manual Override). `;
-                } else {
-                    rem += `${finalStaff} staff member(s) required. `;
-                    if (data.cands > 30) rem += `Extra teacher engaged to satisfy 1:30 over-capacity ratio. `;
-                }
-                if (data.isAux) rem += `Auxiliary technical/specialized room setup verified. `;
-
-                const subjList = data.subjects.join(", ");
-                const assignedArr = Array.from(data.staffNames);
-                const staffDisplay = assignedArr.length > 0 ? assignedArr.join(", ") : "<span style='color:var(--text-3); font-style:italic'>None explicitly assigned</span>";
-
-                html += `<div class="report-section" style="margin-top:15px;">
-                    <b>${room.replace('Auxiliary: ', '')} ${data.isAux ? '<span style="color:var(--amber);font-size:11px">[AUX]</span>' : ''}</b><br>
-                    <small>${data.cands} Total Candidates | Subjects: ${subjList}</small><br>
-                    <div style="margin: 6px 0; font-size: 12px; color: var(--blue-mid);">👥 <b>Assigned:</b> ${staffDisplay}</div>
-                    <div class="remarks-box"><b>Claim Remarks:</b> ${rem}</div>
-                </div>`;
-            }
-        }
-    }
-    document.getElementById('report-content').innerHTML = html;
-}
-// --- NEW REPORTING ENGINE END --- //
-
-// --- NEW RECRUITMENT RADAR LOGIC START --- //
+// ═══════════════════════════════════════════════════════
+//  RECRUITMENT RADAR (FIXED: POOLED BY SUBJECT)
+// ═══════════════════════════════════════════════════════
 function renderRecruitment() {
-  const d = loadData();
+  const d     = loadData();
   const start = document.getElementById('recruit-start').value || todayStr();
-  const end = document.getElementById('recruit-end').value;
+  const end   = document.getElementById('recruit-end').value;
 
-  // Filter exams based on the keyed-in period
   let upcoming = d.exams.filter(e => e.date >= start);
   if (end) upcoming = upcoming.filter(e => e.date <= end);
-  upcoming.sort((a,b) => a.date.localeCompare(b.date));
+  upcoming.sort((a,b)=>a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 
-  // Group exams by Date and Time
   const slots = {};
   upcoming.forEach(e => {
-    const key = e.date + '|' + e.time;
-    if (!slots[key]) slots[key] = { date: e.date, time: e.time, mainCands: 0, auxExams: [] };
-
-    const searchString = e.subject + ' ' + (e.notes||'') + ' ' + (e.room||'');
-    if (AUX_REGEX.test(searchString)) {
-        slots[key].auxExams.push(e);
-    } else {
-        slots[key].mainCands += (e.candidates + (e.ext_nlt||0) + (e.ext_jp||0));
+    const key = e.date+'|'+e.time;
+    if (!slots[key]) slots[key] = { date:e.date, time:e.time, subjects:{} };
+    
+    // Group purely by SUBJECT
+    const subjKey = e.subject.trim();
+    
+    if (!slots[key].subjects[subjKey]) {
+        slots[key].subjects[subjKey] = {
+            cands: 0,
+            isAux: AUX_REGEX.test(subjKey+' '+(e.notes||'')+' '+(e.room||''))
+        };
     }
+    slots[key].subjects[subjKey].cands += e.candidates+(e.ext_nlt||0)+(e.ext_jp||0);
   });
 
   let html = '';
   for (const key in slots) {
-    const slot = slots[key];
-    const extraForMain = Math.ceil(slot.mainCands / 30) - 1;
-    const needsExtraForMain = extraForMain > 0;
-    const hasAux = slot.auxExams.length > 0;
+    const slot  = slots[key];
+    let slotHtml = '';
+    let hasShortage = false;
 
-    // Only render if there is a staffing shortage
-    if (needsExtraForMain || hasAux) {
-      html += `<div style="padding:12px; border:1px solid var(--border); border-radius:8px; margin-bottom:12px; background:var(--surface2);">
-        <div style="font-weight:600; margin-bottom:8px; color:var(--text);">📅 ${fmtDate(slot.date)} — ${slot.time}</div>`;
+    // Loop through each subject running in this time slot
+    for (const subj in slot.subjects) {
+        const data = slot.subjects[subj];
+        const extra = Math.ceil(data.cands/30) - 1;
+        
+        if (extra > 0 || data.isAux) {
+            hasShortage = true;
+            if (extra > 0) {
+              slotHtml += `<div style="color:var(--amber);font-size:13px;margin-bottom:6px">⚠️ <b>${subj}:</b> ${data.cands} cands → needs <b>+${extra} extra staff</b></div>`;
+            }
+            if (data.isAux) {
+              slotHtml += `<div style="color:var(--blue-mid);font-size:13px;margin-bottom:6px">🔬 <b>${subj} (Auxiliary):</b> → needs <b>1 dedicated staff</b></div>`;
+            }
+        }
+    }
 
-      if (needsExtraForMain) {
-        html += `<div style="color:var(--amber); font-size:13px; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-            <span style="font-size:16px">⚠️</span>
-            <span><b>Main Hall Over Capacity:</b> ${slot.mainCands} candidates. Needs <b>+${extraForMain} extra staff</b>.</span>
-        </div>`;
-      }
-
-      if (hasAux) {
-        slot.auxExams.forEach(aux => {
-          html += `<div style="color:var(--blue-mid); font-size:13px; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-            <span style="font-size:16px">🔬</span>
-            <span><b>Auxiliary Room:</b> ${aux.subject} (${aux.room}). Needs <b>1 dedicated staff</b>.</span>
-          </div>`;
-        });
-      }
-      html += `</div>`;
+    if (hasShortage) {
+      html += `<div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:10px;background:var(--surface2)">
+        <div style="font-weight:600;margin-bottom:8px">📅 ${fmtDate(slot.date)} — ${slot.time}</div>
+        ${slotHtml}
+      </div>`;
     }
   }
-
-  document.getElementById('recruitment-list').innerHTML = html || `<div style="padding:30px; text-align:center; color:var(--green-mid); font-weight:500;">No extra recruits needed for this period. You are fully staffed! 🎉</div>`;
-}
-// --- NEW RECRUITMENT RADAR LOGIC END --- //
-
-function showPanel(n){ 
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); 
-    document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(b=>b.classList.remove('active')); 
-    document.getElementById('panel-'+n).classList.add('active'); 
-    const bn=document.getElementById('bnav-'+n); 
-    if(bn) bn.classList.add('active'); 
-    
-    if(n=='dashboard') renderDashboard(); 
-    if(n=='schedule') renderAllExams(); 
-    if(n=='staff') renderStaff(); 
-    if(n=='reports') { populateReportFilters(); renderReports(); }
-    if(n=='recruitment') renderRecruitment(); 
+  
+  document.getElementById('recruitment-list').innerHTML = html ||
+    `<div style="padding:30px;text-align:center;color:var(--green-mid);font-weight:500">✅ No extra recruits needed — fully staffed! 🎉</div>`;
 }
 
-function toggleTheme(){ document.documentElement.hasAttribute('data-theme')?document.documentElement.removeAttribute('data-theme'):document.documentElement.setAttribute('data-theme','dark'); renderDashboard(); }
-function todayStr(){ return new Date().toISOString().split('T')[0]; }
-function fmtDate(ds){ const d=new Date(ds+'T12:00:00'); return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
-function subjColor(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))&0xffff;return COLS[h%COLS.length]}
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+function printRecruitmentReport() {
+  const content = document.getElementById('recruitment-list').innerHTML;
+  if (!content || content.includes('fully staffed')) { showToast('No shortages to print', 'warn'); return; }
+  const w = window.open('','_blank');
+  w.document.write(`<html><head><title>Recruitment Shortages Report</title>
+  <style>body{font-family:sans-serif;padding:30px;color:#000;max-width:800px;margin:0 auto}</style></head><body>
+  <h2>Action Required: Staffing Shortages</h2>
+  <p style="border-bottom:1px solid #ccc;padding-bottom:15px;font-size:13px">Generated: ${fmtDate(todayStr())}</p>
+  ${content.replace(/var\(--[^)]+\)/g,'inherit')}
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
 
-(function(){ 
-    const th = localStorage.getItem('examhub_theme') || 'dark'; 
-    if(th==='dark') document.documentElement.setAttribute('data-theme','dark'); 
-    renderDashboard(); 
-    renderStaff(); 
+// ═══════════════════════════════════════════════════════
+//  FORM UX HELPERS
+// ═══════════════════════════════════════════════════════
+function onCenterChange() {
+  const c = document.getElementById('f-center').value;
+  const banner = document.getElementById('center-info-banner');
+  const info   = document.getElementById('center-info-text');
+  if (c === '100658') {
+    banner.style.display = 'block';
+    info.textContent = 'NLT Centre 100658 — Enter candidate count for exams hosted at this external centre. Use "+Ext" on existing Enid Bennett exams to add NLT external candidates.';
+  } else if (c === '100427') {
+    banner.style.display = 'block';
+    info.textContent = 'JP Centre 100427 — Enter candidate count for exams hosted at this external centre. Use "+Ext" on existing exams to add JP external candidates.';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════════
+function showPanel(n) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn, .bottom-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+  
+  const tn = document.getElementById('tnav-'+n);  if(tn) tn.classList.add('active');
+  const bn = document.getElementById('bnav-'+n);  if(bn) bn.classList.add('active');
+  
+  if (n==='dashboard')   renderDashboard();
+  if (n==='schedule')    { renderAllExams(); }
+  if (n==='staff')       renderStaff();
+  if (n==='reports')     { populateReportFilters(); renderReports(); }
+  if (n==='recruitment') renderRecruitment();
+}
+
+// ═══════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════
+function toggleTheme() {
+  document.documentElement.hasAttribute('data-theme')
+    ? document.documentElement.removeAttribute('data-theme')
+    : document.documentElement.setAttribute('data-theme','dark');
+  renderDashboard();
+}
+function todayStr()  { return new Date().toISOString().split('T')[0]; }
+function fmtDate(ds) { return new Date(ds+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
+function subjColor(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))&0xffff; return COLS[h%COLS.length]; }
+
+function centerBadgeHTML(c) {
+  if (c==='100658') return `<span class="center-badge center-nlt">NLT</span>`;
+  if (c==='100427') return `<span class="center-badge center-jp">JP</span>`;
+  return `<span class="center-badge center-eb">EB</span>`;
+}
+
+let _toastTimer = null;
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════════════════════
+//  BASE EXAM DATA
+// ═══════════════════════════════════════════════════════
+const BASE_EXAMS = [
+  // WEEK 1
+  { id:101,  subject:"CAPE Food & Nut U2 P2",      room:"Food Lab",        date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:102,  subject:"CAPE Digital Media U2 P2",   room:"Computer Lab A",  date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett", notes:"Online" },
+  { id:103,  subject:"CSEC RE Gen P2",             room:"Main Hall",       date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
+  { id:104,  subject:"CSEC English A Gen P2",      room:"Main Hall",       date:"2026-05-05", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett" },
+  { id:105,  subject:"CSEC Spanish Gen P2",        room:"Language Lab",    date:"2026-05-05", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett" },
+  { id:106,  subject:"CSEC Textiles Tech P2",      room:"Clothing Lab",    date:"2026-05-06", time:"Morning (9:00 AM)",    candidates:4,  center:"Enid Bennett" },
+  { id:107,  subject:"CAPE Ag Sci U1 P2",          room:"Agri Lab",        date:"2026-05-06", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
+  { id:108,  subject:"CAPE Logistics U1 P2",       room:"Main Hall",       date:"2026-05-06", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:109,  subject:"CAPE Env Sci U1 P2",         room:"Main Hall",       date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
+  { id:110,  subject:"CAPE Sociology U1 P2",       room:"Classroom 1",     date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
+  { id:111,  subject:"CSEC Ag Sci SA Gen P2",      room:"Agri Lab",        date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:13, center:"Enid Bennett" },
+  { id:112,  subject:"CAPE Carib Studies P2",      room:"Main Hall",       date:"2026-05-07", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:113,  subject:"CSEC POA Gen P2",            room:"Main Hall",       date:"2026-05-07", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:114,  subject:"CSEC Textiles Tech P1",      room:"Clothing Lab",    date:"2026-05-07", time:"Afternoon (1:00 PM)",  candidates:4,  center:"Enid Bennett" },
+  { id:115,  subject:"CAPE IT U1 P2",              room:"Computer Lab A",  date:"2026-05-08", time:"Morning (9:00 AM)",    candidates:2,  center:"Enid Bennett" },
+  { id:116,  subject:"CSEC EDPM Gen P2",           room:"Computer Lab B",  date:"2026-05-08", time:"Morning (9:00 AM)",    candidates:10, center:"Enid Bennett" },
+  // WEEK 2
+  { id:201,  subject:"CAPE Comm Studies P2",       room:"Main Hall",       date:"2026-05-11", time:"Morning (9:00 AM)",    candidates:18, center:"Enid Bennett" },
+  { id:202,  subject:"CSEC Tech Drawing P2",       room:"CAD Lab",         date:"2026-05-11", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:203,  subject:"CSEC HSB Gen P2",            room:"Main Hall",       date:"2026-05-11", time:"Afternoon (1:00 PM)",  candidates:19, center:"Enid Bennett" },
+  { id:204,  subject:"CSEC Math Gen P2",           room:"Main Hall",       date:"2026-05-12", time:"Morning (9:00 AM)",    candidates:41, center:"Enid Bennett" },
+  { id:205,  subject:"CSEC English B Gen P2",      room:"Main Hall",       date:"2026-05-12", time:"Afternoon (1:00 PM)",  candidates:5,  center:"Enid Bennett" },
+  { id:206,  subject:"CSEC Social Studies Gen P2", room:"Main Hall",       date:"2026-05-13", time:"Morning (9:00 AM)",    candidates:33, center:"Enid Bennett" },
+  { id:207,  subject:"CAPE Logistics U2 P2",       room:"Classroom 1",     date:"2026-05-13", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:208,  subject:"CSEC Ind Tech Elec P2",      room:"Tech Lab",        date:"2026-05-13", time:"Afternoon (1:00 PM)",  candidates:10, center:"Enid Bennett" },
+  { id:209,  subject:"CSEC Biology Gen P2",        room:"Science Lab",     date:"2026-05-14", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:210,  subject:"CSEC IT Gen P2",             room:"Computer Lab A",  date:"2026-05-14", time:"Afternoon (1:00 PM)",  candidates:16, center:"Enid Bennett" },
+  { id:211,  subject:"CSEC Integ Sci Gen P2",      room:"Science Lab",     date:"2026-05-15", time:"Morning (9:00 AM)",    candidates:14, center:"Enid Bennett" },
+  { id:212,  subject:"CSEC POB Gen P2",            room:"Main Hall",       date:"2026-05-15", time:"Afternoon (1:00 PM)",  candidates:20, center:"Enid Bennett" },
+  // WEEK 3
+  { id:301,  subject:"CAPE Acct U1 P2",            room:"Classroom 1",     date:"2026-05-18", time:"Morning (9:00 AM)",    candidates:5,  center:"Enid Bennett" },
+  { id:302,  subject:"CSEC Family/Res Mgt P2",     room:"Main Hall",       date:"2026-05-18", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
+  { id:303,  subject:"CSEC Chem Gen P2",           room:"Science Lab",     date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:8,  center:"Enid Bennett" },
+  { id:304,  subject:"CAPE Dig Media U1 P2",       room:"Computer Lab A",  date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:14, center:"Enid Bennett", notes:"Online" },
+  { id:305,  subject:"CSEC Ind Tech Build P2",     room:"Tech Lab",        date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:306,  subject:"CAPE MOB U2 P2",             room:"Classroom 1",     date:"2026-05-19", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
+  { id:307,  subject:"CSEC Ind Tech Mech P2",      room:"Tech Lab",        date:"2026-05-20", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:308,  subject:"CAPE Bio U2 P2",             room:"Science Lab",     date:"2026-05-20", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:309,  subject:"CSEC OA Gen P2",             room:"Main Hall",       date:"2026-05-20", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
+  { id:310,  subject:"CSEC Spanish Gen P1",        room:"Language Lab",    date:"2026-05-20", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett", notes:"Reading" },
+  { id:311,  subject:"CSEC Food/Nut Tech P2",      room:"Food Lab",        date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:5,  center:"Enid Bennett" },
+  { id:312,  subject:"CSEC Carib History P2",      room:"Main Hall",       date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:9,  center:"Enid Bennett" },
+  { id:313,  subject:"CAPE Food/Nut U2 P1",        room:"Food Lab",        date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
+  { id:314,  subject:"CSEC POA Gen P1",            room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:7,  center:"Enid Bennett" },
+  { id:315,  subject:"CSEC Physics Gen P2",        room:"Science Lab",     date:"2026-05-22", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:316,  subject:"CAPE MOB U1 P2",             room:"Classroom 1",     date:"2026-05-22", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:317,  subject:"CSEC PE Gen P1",             room:"Main Hall",       date:"2026-05-22", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
+  // WEEK 4
+  { id:401,  subject:"CAPE Entrep U2 P2",          room:"Main Hall",       date:"2026-05-25", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
+  { id:402,  subject:"CSEC Family/Res Mgt P1",     room:"Main Hall",       date:"2026-05-25", time:"Morning (9:00 AM)",    candidates:8,  center:"Enid Bennett" },
+  { id:403,  subject:"CAPE Dig Media U2 P1",       room:"Computer Lab A",  date:"2026-05-25", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett", notes:"Online" },
+  { id:404,  subject:"CAPE Logistics U2 P1",       room:"Main Hall",       date:"2026-05-25", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
+  { id:405,  subject:"CSEC English A Gen P1",      room:"Main Hall",       date:"2026-05-26", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett" },
+  { id:406,  subject:"CAPE Bio U2 P1",             room:"Science Lab",     date:"2026-05-26", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
+  { id:407,  subject:"CSEC Ag Sci SA Gen P1",      room:"Agri Lab",        date:"2026-05-27", time:"Morning (9:00 AM)",    candidates:13, center:"Enid Bennett" },
+  { id:408,  subject:"CAPE Entrep U1 P2",          room:"Classroom 1",     date:"2026-05-27", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:409,  subject:"CAPE Dig Media U1 P1",       room:"Computer Lab A",  date:"2026-05-27", time:"Morning (9:00 AM)",    candidates:14, center:"Enid Bennett", notes:"Online" },
+  { id:410,  subject:"CSEC Math Gen P1",           room:"Main Hall",       date:"2026-05-28", time:"Morning (9:00 AM)",    candidates:41, center:"Enid Bennett" },
+  { id:411,  subject:"CAPE Acct U1 P1",            room:"Main Hall",       date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:5,  center:"Enid Bennett" },
+  { id:412,  subject:"CSEC IT Gen P1",             room:"Computer Lab A",  date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:16, center:"Enid Bennett" },
+  { id:413,  subject:"CSEC Integ Sci Gen P1",      room:"Science Lab",     date:"2026-05-29", time:"Afternoon (1:00 PM)",  candidates:14, center:"Enid Bennett" },
+  // WEEK 5
+  { id:501,  subject:"CSEC HSB Gen P1",            room:"Main Hall",       date:"2026-06-01", time:"Morning (9:00 AM)",    candidates:19, center:"Enid Bennett" },
+  { id:502,  subject:"CSEC Music Gen P1",          room:"Music Studio",    date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:9,  center:"Enid Bennett" },
+  { id:503,  subject:"CSEC Chem Gen P1",           room:"Science Lab",     date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
+  { id:504,  subject:"CSEC EDPM Gen P1",           room:"Computer Lab B",  date:"2026-06-02", time:"Morning (9:00 AM)",    candidates:10, center:"Enid Bennett" },
+  { id:505,  subject:"CSEC RE Gen P1",             room:"Main Hall",       date:"2026-06-02", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
+  { id:506,  subject:"CAPE Soc U1 P1",             room:"Classroom 1",     date:"2026-06-02", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:507,  subject:"CAPE Ag Sci U1 P1",          room:"Agri Lab",        date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett" },
+  { id:508,  subject:"CSEC Physics Gen P1",        room:"Science Lab",     date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:7,  center:"Enid Bennett" },
+  { id:509,  subject:"CSEC Theatre Arts P1",       room:"Drama Studio",    date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:9,  center:"Enid Bennett" },
+  { id:510,  subject:"CSEC Social Studies P1",     room:"Main Hall",       date:"2026-06-03", time:"Morning (9:00 AM)",    candidates:33, center:"Enid Bennett" },
+  { id:511,  subject:"CSEC OA Gen P1",             room:"Main Hall",       date:"2026-06-03", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
+  { id:512,  subject:"CSEC Tech Drawing P1",       room:"CAD Lab",         date:"2026-06-04", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:513,  subject:"CSEC Food/Nut Tech P1",      room:"Food Lab",        date:"2026-06-04", time:"Afternoon (1:00 PM)",  candidates:5,  center:"Enid Bennett" },
+  { id:514,  subject:"CSEC Biology Gen P1",        room:"Science Lab",     date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:515,  subject:"CSEC POB Gen P1",            room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:20, center:"Enid Bennett" },
+  { id:516,  subject:"CAPE Env Sci U1 P1",         room:"Main Hall",       date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
+  { id:517,  subject:"CSEC English B Gen P1",      room:"Classroom 1",     date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:5,  center:"Enid Bennett" },
+  // WEEK 6
+  { id:601,  subject:"CAPE Entrep U2 P1",          room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett" },
+  { id:602,  subject:"CSEC Ind Tech P1 Comb",      room:"Tech Lab",        date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:22, center:"Enid Bennett" },
+  { id:603,  subject:"CSEC Carib History P1",      room:"Classroom 1",     date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:9,  center:"Enid Bennett" },
+  { id:604,  subject:"CAPE MOB U2 P1",             room:"Classroom 1",     date:"2026-06-09", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
+  { id:605,  subject:"C&G NCTVET English",         room:"Reading Room",    date:"2026-06-10", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett", notes:"Reading/Writing" },
+  { id:606,  subject:"CAPE IT U1 P1",              room:"Computer Lab A",  date:"2026-06-10", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
+  { id:607,  subject:"C&G NCTVET Cust Serv",       room:"Main Hall",       date:"2026-06-11", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett" },
+  { id:608,  subject:"CAPE MOB U1 P1",             room:"Classroom 1",     date:"2026-06-11", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:609,  subject:"CAPE Logistics U1 P1",       room:"Classroom 2",     date:"2026-06-11", time:"Afternoon (1:00 PM)",  candidates:7,  center:"Enid Bennett" },
+  { id:610,  subject:"C&G NCTVET Math",            room:"Main Hall",       date:"2026-06-12", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett" },
+  { id:611,  subject:"CAPE Entrep U1 P1",          room:"Classroom 1",     date:"2026-06-12", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  // WEEK 7
+  { id:701,  subject:"CAPE Carib Studies P1",      room:"Main Hall",       date:"2026-06-15", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:702,  subject:"CAPE Comm Studies P1",       room:"Main Hall",       date:"2026-06-16", time:"Morning (9:00 AM)",    candidates:18, center:"Enid Bennett" }
+];
+
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+(function boot() {
+  const th = localStorage.getItem('examhub_theme') || 'dark';
+  if (th === 'dark') document.documentElement.setAttribute('data-theme','dark');
+  
+  const dateInput = document.getElementById('f-date');
+  if (dateInput) dateInput.value = todayStr();
+  
+  renderDashboard();
+  renderStaff();
 })();
-
 </script>
 </body>
 </html>
