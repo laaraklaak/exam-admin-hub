@@ -344,7 +344,6 @@ input::placeholder{color:var(--text-3)}
 </nav>
 
 <div class="toast" id="toast"></div>
-
 <script>
 // ═══════════════════════════════════════════════════════
 //  CONSTANTS & COLOUR PALETTE
@@ -429,16 +428,19 @@ function updateSyncBadge(state) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  CALCULATIONS (FIXED: POOLED BY SUBJECT)
+//  CALCULATIONS & TIME SORTING ENGINE
 // ═══════════════════════════════════════════════════════
 const getStaffNeeded = n => Math.max(1, Math.ceil(n / 30));
+
+// KEY FIX: Forces Morning to be weighted as 1, Afternoon as 2. Defeats alphabetical sort.
+const timeWeight = t => (t && t.includes('Morning')) ? 1 : 2;
 
 function getDailyStaff(examsArr) {
   const timeSlots = {};
   examsArr.forEach(e => {
     if (!timeSlots[e.time]) timeSlots[e.time] = {};
     
-    // Group purely by SUBJECT (merges all centers taking this exact paper)
+    // Group purely by SUBJECT
     const key = e.subject.trim().toUpperCase(); 
     
     if (!timeSlots[e.time][key]) timeSlots[e.time][key] = { cands:0, manualMax:0 };
@@ -548,7 +550,9 @@ function renderDashboard() {
   } else {
     up = d.exams.filter(e => e.date >= t);
   }
-  up.sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  
+  // KEY FIX: Sort chronologically using TimeWeight
+  up.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
 
   const nextDayExams = up.filter(e => e.date === up[0]?.date);
   const staffNeeded  = getDailyStaff(nextDayExams);
@@ -651,7 +655,10 @@ function openGate(date) {
 function renderAllExams() {
   const d    = loadData();
   const term = (document.getElementById('schedule-filter')?.value || '').toLowerCase();
-  let   list = d.exams.sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  
+  // KEY FIX: Sort chronologically using TimeWeight
+  let list = d.exams.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
+  
   if (term) list = list.filter(e =>
     e.subject.toLowerCase().includes(term) ||
     e.room.toLowerCase().includes(term) ||
@@ -850,7 +857,10 @@ function removeStaff(n) {
 
 function printStaffSchedule(staffName) {
   const d = loadData();
-  const myExams = d.exams.filter(e => e.assigned?.includes(staffName)).sort((a,b)=>a.date.localeCompare(b.date));
+  
+  // KEY FIX: Sort Printout chronologically using TimeWeight
+  const myExams = d.exams.filter(e => e.assigned?.includes(staffName)).sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
+  
   let html = `<html><head><title>${staffName} - Schedule</title>
   <style>body{font-family:sans-serif;padding:30px;color:#000;max-width:800px;margin:0 auto}
   table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px}
@@ -868,7 +878,7 @@ function printStaffSchedule(staffName) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  REPORTS (FIXED: POOLED BY SUBJECT)
+//  REPORTS
 // ═══════════════════════════════════════════════════════
 function populateReportFilters() {
   const select = document.getElementById('rep-invig');
@@ -895,14 +905,14 @@ function renderReports() {
 
   if (!filtered.length) { el.innerHTML = "<p class='empty-state'>No sessions match the filters.</p>"; return; }
 
-  filtered.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  // KEY FIX: Sort Reports chronologically using TimeWeight
+  filtered.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
 
   const byDate = {};
   filtered.forEach(e => {
     if (!byDate[e.date]) byDate[e.date] = { times:{}, totalCands:0 };
     if (!byDate[e.date].times[e.time]) byDate[e.date].times[e.time] = { subjects:{} };
     
-    // Group purely by SUBJECT
     const subjKey = e.subject.trim();
     
     if (!byDate[e.date].times[e.time].subjects[subjKey]) {
@@ -988,7 +998,7 @@ function printMasterReport() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  RECRUITMENT RADAR (FIXED: POOLED BY SUBJECT)
+//  RECRUITMENT RADAR
 // ═══════════════════════════════════════════════════════
 function renderRecruitment() {
   const d     = loadData();
@@ -997,14 +1007,15 @@ function renderRecruitment() {
 
   let upcoming = d.exams.filter(e => e.date >= start);
   if (end) upcoming = upcoming.filter(e => e.date <= end);
-  upcoming.sort((a,b)=>a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  
+  // KEY FIX: Sort Recruits chronologically using TimeWeight
+  upcoming.sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
 
   const slots = {};
   upcoming.forEach(e => {
     const key = e.date+'|'+e.time;
     if (!slots[key]) slots[key] = { date:e.date, time:e.time, subjects:{} };
     
-    // Group purely by SUBJECT
     const subjKey = e.subject.trim();
     
     if (!slots[key].subjects[subjKey]) {
@@ -1022,7 +1033,6 @@ function renderRecruitment() {
     let slotHtml = '';
     let hasShortage = false;
 
-    // Loop through each subject running in this time slot
     for (const subj in slot.subjects) {
         const data = slot.subjects[subj];
         const extra = Math.ceil(data.cands/30) - 1;
