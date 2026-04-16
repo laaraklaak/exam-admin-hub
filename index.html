@@ -199,7 +199,7 @@ input::placeholder{color:var(--text-3)}
       <div class="section-header" style="margin-bottom:14px">➕ Add Exam to Schedule</div>
 
       <div class="form-group" style="margin-bottom:14px">
-        <label>Exam Center</label>
+        <label>Primary Registration Center</label>
         <select id="f-center" onchange="onCenterChange()" style="font-weight:600">
           <option value="Enid Bennett">🏫 Enid Bennett High (Home)</option>
           <option value="100658">📍 NLT — Centre 100658</option>
@@ -273,7 +273,7 @@ input::placeholder{color:var(--text-3)}
         <div class="section-header" style="margin-bottom:0">🚨 Recruitment Radar</div>
         <button class="btn-small" onclick="printRecruitmentReport()" style="background:var(--blue-mid);color:white;border:none;padding:10px 14px">🖨️ Print / PDF</button>
       </div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:15px;border-bottom:1px solid var(--border);padding-bottom:10px">Select a date range to identify sessions needing extra invigilators.</p>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:15px;border-bottom:1px solid var(--border);padding-bottom:10px">Identifies when Total Pooled Candidates cross the 90-seat Main Hall capacity or 1:30 ratio.</p>
       <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
         <div style="flex:1;min-width:140px">
           <label>START DATE</label>
@@ -291,7 +291,7 @@ input::placeholder{color:var(--text-3)}
   <div class="panel" id="panel-reports">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-        <div class="section-header" style="margin-bottom:0">📋 Master Logistics Report</div>
+        <div class="section-header" style="margin-bottom:0">📋 Master Logistics Report (90-Cap Pool)</div>
         <button class="btn-small" onclick="printMasterReport()" style="background:var(--blue-mid);color:white;border:none;padding:10px 14px">🖨️ Print / PDF</button>
       </div>
       <div class="form-grid-2" style="margin-bottom:15px">
@@ -306,10 +306,10 @@ input::placeholder{color:var(--text-3)}
         <div class="form-group">
           <label>Center</label>
           <select id="rep-center" onchange="renderReports()">
-            <option value="all">All Centers</option>
-            <option value="Enid Bennett">Enid Bennett</option>
-            <option value="100658">NLT (100658)</option>
-            <option value="100427">JP (100427)</option>
+            <option value="all">All Centers (Pooled at EB)</option>
+            <option value="Enid Bennett">Enid Bennett Registered Only</option>
+            <option value="100658">NLT (100658) Registered Only</option>
+            <option value="100427">JP (100427) Registered Only</option>
           </select>
         </div>
         <div class="form-group">
@@ -348,10 +348,11 @@ input::placeholder{color:var(--text-3)}
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONSTANTS & COLOUR PALETTE (UPDATED TO v6)
+//  CONSTANTS & COLOUR PALETTE
 // ═══════════════════════════════════════════════════════
-const SK  = 'enid_bennett_db_v6';
-const STK = 'enid_staff_v6';
+const SK  = 'enid_bennett_db_v7';
+const STK = 'enid_staff_v7';
+const CAPACITY_LIMIT = 90; // Main Hall Maximum Capacity
 
 const COLS = [
   {mid:'#3b82f6',dark:'#93c5fd',bg:'#dbeafe',dbg:'#1e2d4a'},
@@ -362,7 +363,8 @@ const COLS = [
   {mid:'#14b8a6',dark:'#5eead4',bg:'#ccfbf1',dbg:'#0c2420'}
 ];
 
-const AUX_REGEX = /(digital\s*media|edpm|tech.*drawing.*p2|music|visual\s*arts|spanish.*p1|online|reading|paper\s*0?32|p0?32)/i;
+// UPDATED: Now detects "lab", "p3/2", "practical" to isolate Science Labs from Main Hall!
+const AUX_REGEX = /(digital\s*media|edpm|tech\s*drawing\s*p2|music|visual\s*arts|spanish\s*p1|online|reading|p\s*0?32|paper\s*0?32|p3\/2|lab|practical)/i;
 
 // ═══════════════════════════════════════════════════════
 //  ⚠️ FIREBASE RACE-CONDITION GUARD
@@ -382,13 +384,12 @@ function releaseSyncLock() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  DATA HELPERS (UPDATED TO PUSH v6 & HANDLE SPARSE ARRAYS)
+//  DATA HELPERS
 // ═══════════════════════════════════════════════════════
 function loadData() {
   let d = null;
   try { d = JSON.parse(localStorage.getItem(SK)); } catch(e) {}
   
-  // FIX SPARSE ARRAYS
   if (d && d.exams && !Array.isArray(d.exams)) {
       d.exams = Object.values(d.exams);
   }
@@ -399,7 +400,6 @@ function loadData() {
     cloudPush(d);
   }
   
-  // REMOVE NULLS
   d.exams = d.exams.filter(e => e !== null && e !== undefined);
   return d;
 }
@@ -413,7 +413,7 @@ function saveData(d) {
 
 function cloudPush(d) {
   if (!window.firebaseDB) return;
-  window.firebaseDB.ref('examhub/data_v6').set(d)
+  window.firebaseDB.ref('examhub/data_v7').set(d)
     .then(() => { releaseSyncLock(); updateSyncBadge('synced'); })
     .catch(err => {
       releaseSyncLock();
@@ -426,7 +426,7 @@ function loadStaff() {
 }
 function saveStaff(s) {
   localStorage.setItem(STK, JSON.stringify(s));
-  if (window.firebaseDB) window.firebaseDB.ref('examhub/staff_v6').set(s).catch(()=>{});
+  if (window.firebaseDB) window.firebaseDB.ref('examhub/staff_v7').set(s).catch(()=>{});
 }
 
 function updateSyncBadge(state) {
@@ -439,37 +439,64 @@ function updateSyncBadge(state) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  CALCULATIONS & TIME SORTING ENGINE
+//  CALCULATIONS (90-SEAT POOL ENGINE)
 // ═══════════════════════════════════════════════════════
-const getStaffNeeded = n => Math.max(1, Math.ceil(n / 30));
 const timeWeight = t => (t && t.includes('Morning')) ? 1 : 2;
 
 function getDailyStaff(examsArr) {
   const timeSlots = {};
+  
   examsArr.forEach(e => {
     if (!timeSlots[e.time]) timeSlots[e.time] = {};
-    const key = e.subject.trim().toUpperCase(); 
-    if (!timeSlots[e.time][key]) timeSlots[e.time][key] = { cands:0, manualMax:0 };
-    timeSlots[e.time][key].cands += e.candidates + (e.ext_nlt||0) + (e.ext_jp||0);
-    if ((e.manual_staff||0) > timeSlots[e.time][key].manualMax) {
+    
+    const key = e.subject.trim().toUpperCase();
+    if (!timeSlots[e.time][key]) {
+      timeSlots[e.time][key] = { 
+        cands: 0, 
+        manualMax: 0,
+        isAux: AUX_REGEX.test(e.subject + ' ' + (e.notes || '') + ' ' + (e.room || ''))
+      };
+    }
+    timeSlots[e.time][key].cands += e.candidates + (e.ext_nlt || 0) + (e.ext_jp || 0);
+    if ((e.manual_staff || 0) > timeSlots[e.time][key].manualMax) {
         timeSlots[e.time][key].manualMax = e.manual_staff;
     }
   });
-  
+
   let peak = 0;
   for (const t in timeSlots) {
-    let sum = 0;
+    let slotStaff = 0;
+    let standardCands = 0;
+
     for (const key in timeSlots[t]) {
       const data = timeSlots[t][key];
-      sum += Math.max(Math.ceil(data.cands/30), data.manualMax||1, 1);
+      if (data.manualMax > 0) {
+        slotStaff += data.manualMax;
+      } else if (data.isAux) {
+        slotStaff += Math.ceil(data.cands / 30);
+      } else {
+        standardCands += data.cands;
+      }
     }
-    if (sum > peak) peak = sum;
+    
+    if (standardCands > 0) {
+      if (standardCands <= CAPACITY_LIMIT) {
+          slotStaff += Math.ceil(standardCands / 30); 
+      } else {
+          const mainHallStaff = Math.ceil(CAPACITY_LIMIT / 30); 
+          const overflowCands = standardCands - CAPACITY_LIMIT;
+          const overflowStaff = Math.ceil(overflowCands / 30);
+          slotStaff += mainHallStaff + overflowStaff;
+      }
+    }
+
+    if (slotStaff > peak) peak = slotStaff;
   }
   return peak;
 }
 
 // ═══════════════════════════════════════════════════════
-//  FIREBASE INIT (UPDATED TO READ v6)
+//  FIREBASE INIT 
 // ═══════════════════════════════════════════════════════
 (function loadFirebase() {
   const s1 = document.createElement('script');
@@ -498,7 +525,7 @@ function initFirebase() {
     const db = firebase.database();
     window.firebaseDB = db;
 
-    db.ref('examhub/data_v6').on('value', snap => {
+    db.ref('examhub/data_v7').on('value', snap => {
       if (_syncLock) return;
       const val = snap.val();
       if (val && val.exams) {
@@ -511,7 +538,7 @@ function initFirebase() {
       }
     }, err => { updateSyncBadge('error'); });
 
-    db.ref('examhub/staff_v6').on('value', snap => {
+    db.ref('examhub/staff_v7').on('value', snap => {
       if (_syncLock) return;
       const val = snap.val();
       if (Array.isArray(val)) {
@@ -675,7 +702,7 @@ function openGate(date) {
 
   html += `
     <div style="margin-top:16px;padding-top:12px;border-top:2px solid var(--border)">
-      <div style="font-size:11px; font-weight:700; color:var(--text-2); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Daily Physical Center Load</div>
+      <div style="font-size:11px; font-weight:700; color:var(--text-2); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px">Center Registration Breakdown</div>
       <div class="modal-stat-row" style="border:none;margin-bottom:2px;padding:4px 0"><span>🏫 EB (Home)</span><b>${eb}</b></div>
       ${nlt > 0 ? `<div class="modal-stat-row" style="border:none;margin-bottom:2px;padding:4px 0;color:var(--blue-mid)"><span>📍 NLT — 100658</span><b>${nlt}</b></div>` : ''}
       ${jp > 0 ? `<div class="modal-stat-row" style="border:none;padding:4px 0;color:var(--purple-mid)"><span>📍 JP — 100427</span><b>${jp}</b></div>` : ''}
@@ -911,7 +938,7 @@ function printStaffSchedule(staffName) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  REPORTS
+//  REPORTS (90-CAPACITY POOL)
 // ═══════════════════════════════════════════════════════
 function populateReportFilters() {
   const select = document.getElementById('rep-invig');
@@ -945,12 +972,16 @@ function renderReports() {
     if (!byDate[e.date]) byDate[e.date] = { times:{}, totalCands:0 };
     if (!byDate[e.date].times[e.time]) byDate[e.date].times[e.time] = { subjects:{} };
     
-    const subjKey = e.subject.trim();
+    // Group purely by subject. No center splitting.
+    const subjKey = e.subject.trim().toUpperCase();
     
     if (!byDate[e.date].times[e.time].subjects[subjKey]) {
       byDate[e.date].times[e.time].subjects[subjKey] = {
-         cands:0, manualMax:0, rooms:new Set(), centers:new Set(), staffNames:new Set(),
-         isAux: AUX_REGEX.test(subjKey+' '+(e.notes||'')+' '+(e.room||''))
+         cands:0, manualMax:0, rooms:new Set(), 
+         subjectName: e.subject.trim(),
+         staffNames:new Set(),
+         centersAssigned: new Set(),
+         isAux: AUX_REGEX.test(e.subject.trim()+' '+(e.notes||'')+' '+(e.room||''))
       };
     }
       
@@ -960,7 +991,10 @@ function renderReports() {
     data.cands += cnt;
     byDate[e.date].totalCands += cnt;
     data.rooms.add(e.room);
-    data.centers.add(e.center==='100658' ? 'NLT' : e.center==='100427' ? 'JP' : 'EB');
+    
+    if (e.candidates > 0) data.centersAssigned.add("EB");
+    if (e.ext_nlt > 0 || e.center==='100658') data.centersAssigned.add("NLT");
+    if (e.ext_jp > 0 || e.center==='100427') data.centersAssigned.add("JP");
     
     if (e.assigned) e.assigned.forEach(n=>data.staffNames.add(n));
     if ((e.manual_staff||0)>data.manualMax) data.manualMax = e.manual_staff;
@@ -972,11 +1006,32 @@ function renderReports() {
       📅 ${fmtDate(date)} <span style="float:right;font-size:12px;font-weight:400">Day Total: ${byDate[date].totalCands} cands</span></div>`;
     
     for (const time in byDate[date].times) {
-      let slotStaff = 0;
-      for (const subj in byDate[date].times[time].subjects) {
-        const data = byDate[date].times[time].subjects[subj];
-        slotStaff += Math.max(Math.ceil(data.cands/30), data.manualMax||1, 1);
-      }
+        let slotStaff = 0;
+        let standardCands = 0;
+
+        for (const subjKey in byDate[date].times[time].subjects) {
+          const data = byDate[date].times[time].subjects[subjKey];
+          
+          if (data.manualMax > 0) {
+            slotStaff += data.manualMax;
+          } else if (data.isAux) {
+            slotStaff += Math.ceil(data.cands / 30);
+          } else {
+            standardCands += data.cands;
+          }
+        }
+        
+        // Add staff for pooled candidates using the 90 Cap Rule
+        if (standardCands > 0) {
+            if (standardCands <= CAPACITY_LIMIT) {
+                slotStaff += Math.ceil(standardCands / 30); 
+            } else {
+                const mainHallStaff = Math.ceil(CAPACITY_LIMIT / 30); 
+                const overflowStaff = Math.ceil((standardCands - CAPACITY_LIMIT) / 30);
+                slotStaff += mainHallStaff + overflowStaff;
+            }
+        }
+
       const extra = Math.max(0, slotStaff-1);
       html += `<div style="margin-top:14px;padding-bottom:10px;border-bottom:2px solid var(--border)">
         <b>${time} Session</b><br>
@@ -986,24 +1041,42 @@ function renderReports() {
           ${extra>0?`<span style="color:var(--amber)"> + (${extra} extra teacher${extra>1?'s':''})</span>`:''}
         </span></div>`;
         
-      for (const subj in byDate[date].times[time].subjects) {
-        const data    = byDate[date].times[time].subjects[subj];
-        const auto    = Math.max(1, Math.ceil(data.cands/30));
-        const final   = Math.max(auto, data.manualMax||1);
+      for (const subjKey in byDate[date].times[time].subjects) {
+        const data    = byDate[date].times[time].subjects[subjKey];
         const assigned= Array.from(data.staffNames);
-        const centersArr = Array.from(data.centers).join(', ');
         const roomsArr = Array.from(data.rooms).join(', ');
+        const regCenters = Array.from(data.centersAssigned).join(', ');
 
-        let rem = final + ' staff required. ';
-        if ((data.manualMax||0)>auto) rem += 'Manual override applied. ';
-        else if (data.cands>30)       rem += 'Extra teacher for 1:30 over-capacity. ';
-        if (data.isAux) rem += 'Auxiliary technical room — specialist setup required. ';
+        let rem = '';
+        let roomAssignmentStr = `Rooms: ${roomsArr}`;
+        let finalStaffNeeded = 0;
+
+        if (data.manualMax > 0) {
+            finalStaffNeeded = data.manualMax;
+            rem += `Manual override applied. `;
+        } else if (data.isAux) {
+            finalStaffNeeded = Math.ceil(data.cands / 30);
+            rem += 'Auxiliary room — specialist setup required. ';
+            if (data.cands > 30) rem += 'Extra teacher for over-capacity. ';
+        } else {
+            if (data.cands <= CAPACITY_LIMIT) {
+                finalStaffNeeded = Math.ceil(data.cands / 30);
+            } else {
+                const mainHallStaff = Math.ceil(CAPACITY_LIMIT / 30);
+                const overflowCands = data.cands - CAPACITY_LIMIT;
+                const overflowStaff = Math.ceil(overflowCands / 30);
+                finalStaffNeeded = mainHallStaff + overflowStaff;
+                
+                roomAssignmentStr = `Main Hall (90 cands) + Overflow Room (${overflowCands} cands)`;
+                rem += `⚠️ 90-Capacity Exceeded. Requires Overflow Room for ${overflowCands} candidates. `;
+            }
+        }
         
         html += `<div class="report-section" style="margin-top:14px">
-          <b>${subj}</b> ${data.isAux?'<span style="color:var(--amber);font-size:11px">[AUX]</span>':''}<br>
-          <small style="color:var(--text-2)">${data.cands} candidates | Centers: ${centersArr} | Rooms: ${roomsArr}</small><br>
+          <b>${data.subjectName}</b> ${data.isAux?'<span style="color:var(--amber);font-size:11px">[AUX]</span>':''}<br>
+          <small style="color:var(--text-2)">${data.cands} candidates | Registrations: ${regCenters} | <b>${roomAssignmentStr}</b></small><br>
           <div style="font-size:12px;color:var(--blue-mid);margin:5px 0">👥 <b>Assigned:</b> ${assigned.length?assigned.join(', '):'<span style="color:var(--text-3);font-style:italic">None assigned</span>'}</div>
-          <div class="remarks-box"><b>Claim:</b> ${rem}</div>
+          <div class="remarks-box"><b>Requirement:</b> ${finalStaffNeeded} Staff. ${rem}</div>
         </div>`;
       }
     }
@@ -1046,12 +1119,13 @@ function renderRecruitment() {
     const key = e.date+'|'+e.time;
     if (!slots[key]) slots[key] = { date:e.date, time:e.time, subjects:{} };
     
-    const subjKey = e.subject.trim();
+    const subjKey = e.subject.trim().toUpperCase();
     
     if (!slots[key].subjects[subjKey]) {
         slots[key].subjects[subjKey] = {
             cands: 0,
-            isAux: AUX_REGEX.test(subjKey+' '+(e.notes||'')+' '+(e.room||''))
+            subjectName: e.subject.trim(),
+            isAux: AUX_REGEX.test(e.subject.trim()+' '+(e.notes||'')+' '+(e.room||''))
         };
     }
     slots[key].subjects[subjKey].cands += e.candidates+(e.ext_nlt||0)+(e.ext_jp||0);
@@ -1059,22 +1133,36 @@ function renderRecruitment() {
 
   let html = '';
   for (const key in slots) {
-    const slot  = slots[key];
+    const slot = slots[key];
     let slotHtml = '';
     let hasShortage = false;
+    let standardCands = 0; 
 
-    for (const subj in slot.subjects) {
-        const data = slot.subjects[subj];
-        const extra = Math.ceil(data.cands/30) - 1;
+    for (const subjKey in slot.subjects) {
+        const data = slot.subjects[subjKey];
+
+        if (data.isAux) {
+            const auxStaffNeeded = Math.ceil(data.cands / 30);
+            hasShortage = true; 
+            slotHtml += `<div style="color:var(--blue-mid);font-size:13px;margin-bottom:6px">🔬 <b>${data.subjectName} (Aux):</b> ${data.cands} cands → needs <b>${auxStaffNeeded} dedicated staff</b></div>`;
+        } else {
+            standardCands += data.cands;
+        }
+    }
+
+    if (standardCands > 30) {
+        hasShortage = true;
+        let extra = 0;
         
-        if (extra > 0 || data.isAux) {
-            hasShortage = true;
-            if (extra > 0) {
-              slotHtml += `<div style="color:var(--amber);font-size:13px;margin-bottom:6px">⚠️ <b>${subj}:</b> ${data.cands} cands → needs <b>+${extra} extra staff</b></div>`;
-            }
-            if (data.isAux) {
-              slotHtml += `<div style="color:var(--blue-mid);font-size:13px;margin-bottom:6px">🔬 <b>${subj} (Auxiliary):</b> → needs <b>1 dedicated staff</b></div>`;
-            }
+        if (standardCands <= CAPACITY_LIMIT) {
+             extra = Math.ceil(standardCands / 30) - 1;
+             slotHtml += `<div style="color:var(--amber);font-size:13px;margin-bottom:6px">⚠️ <b>Standard Pool:</b> ${standardCands} cands (Main Hall only) → needs <b>+${extra} extra staff</b></div>`;
+        } else {
+             const mainHallStaff = Math.ceil(CAPACITY_LIMIT / 30);
+             const overflowStaff = Math.ceil((standardCands - CAPACITY_LIMIT) / 30);
+             extra = (mainHallStaff + overflowStaff) - 1;
+             const overflowCands = standardCands - CAPACITY_LIMIT;
+             slotHtml += `<div style="color:var(--red-mid);font-size:13px;margin-bottom:6px">🚨 <b>Capacity Alert:</b> ${standardCands} cands. Forces Overflow Room (${overflowCands} cands). Needs <b>+${extra} extra staff</b> total.</div>`;
         }
     }
 
@@ -1173,21 +1261,21 @@ function showToast(msg, type='info') {
 const BASE_EXAMS = [
   // --- ENID BENNETT (HOME) CANDIDATES ---
   // WEEK 1
-  { id:101,  subject:"CAPE Food & Nut U2 P2",      room:"Food Lab",        date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:101,  subject:"CAPE Food & Nut U2 P2",      room:"Main Hall",       date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
   { id:102,  subject:"CAPE Digital Media U2 P2",   room:"Computer Lab A",  date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett", notes:"Online" },
   { id:103,  subject:"CSEC RE Gen P2",             room:"Main Hall",       date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
   { id:104,  subject:"CSEC English A Gen P2",      room:"Main Hall",       date:"2026-05-05", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett" },
-  { id:105,  subject:"CSEC Spanish Gen P2",        room:"Language Lab",    date:"2026-05-05", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett" },
-  { id:106,  subject:"CSEC Textiles Tech P2",      room:"Clothing Lab",    date:"2026-05-06", time:"Morning (9:00 AM)",    candidates:4,  center:"Enid Bennett" },
-  { id:107,  subject:"CAPE Ag Sci U1 P2",          room:"Agri Lab",        date:"2026-05-06", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
+  { id:105,  subject:"CSEC Spanish Gen P2",        room:"Main Hall",       date:"2026-05-05", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett" },
+  { id:106,  subject:"CSEC Textiles Tech P2",      room:"Main Hall",       date:"2026-05-06", time:"Morning (9:00 AM)",    candidates:4,  center:"Enid Bennett" },
+  { id:107,  subject:"CAPE Ag Sci U1 P2",          room:"Main Hall",       date:"2026-05-06", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
   { id:108,  subject:"CAPE Logistics U1 P2",       room:"Main Hall",       date:"2026-05-06", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
   { id:109,  subject:"CAPE Env Sci U1 P2",         room:"Main Hall",       date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
-  { id:110,  subject:"CAPE Sociology U1 P2",       room:"Classroom 1",     date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
-  { id:111,  subject:"CSEC Ag Sci SA Gen P2",      room:"Agri Lab",        date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:13, center:"Enid Bennett" },
+  { id:110,  subject:"CAPE Sociology U1 P2",       room:"Main Hall",       date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
+  { id:111,  subject:"CSEC Ag Sci SA Gen P2",      room:"Main Hall",       date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:13, center:"Enid Bennett" },
   { id:112,  subject:"CAPE Carib Studies P2",      room:"Main Hall",       date:"2026-05-07", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
   { id:113,  subject:"CSEC POA Gen P2",            room:"Main Hall",       date:"2026-05-07", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
-  { id:114,  subject:"CSEC Textiles Tech P1",      room:"Clothing Lab",    date:"2026-05-07", time:"Afternoon (1:00 PM)",  candidates:4,  center:"Enid Bennett" },
-  { id:115,  subject:"CAPE IT U1 P2",              room:"Computer Lab A",  date:"2026-05-08", time:"Morning (9:00 AM)",    candidates:2,  center:"Enid Bennett" },
+  { id:114,  subject:"CSEC Textiles Tech P1",      room:"Main Hall",       date:"2026-05-07", time:"Afternoon (1:00 PM)",  candidates:4,  center:"Enid Bennett" },
+  { id:115,  subject:"CAPE IT U1 P2",              room:"Main Hall",       date:"2026-05-08", time:"Morning (9:00 AM)",    candidates:2,  center:"Enid Bennett" },
   { id:116,  subject:"CSEC EDPM Gen P2",           room:"Computer Lab B",  date:"2026-05-08", time:"Morning (9:00 AM)",    candidates:10, center:"Enid Bennett" },
   // WEEK 2
   { id:201,  subject:"CAPE Comm Studies P2",       room:"Main Hall",       date:"2026-05-11", time:"Morning (9:00 AM)",    candidates:18, center:"Enid Bennett" },
@@ -1196,29 +1284,29 @@ const BASE_EXAMS = [
   { id:204,  subject:"CSEC Math Gen P2",           room:"Main Hall",       date:"2026-05-12", time:"Morning (9:00 AM)",    candidates:41, center:"Enid Bennett" },
   { id:205,  subject:"CSEC English B Gen P2",      room:"Main Hall",       date:"2026-05-12", time:"Afternoon (1:00 PM)",  candidates:5,  center:"Enid Bennett" },
   { id:206,  subject:"CSEC Social Studies Gen P2", room:"Main Hall",       date:"2026-05-13", time:"Morning (9:00 AM)",    candidates:33, center:"Enid Bennett" },
-  { id:207,  subject:"CAPE Logistics U2 P2",       room:"Classroom 1",     date:"2026-05-13", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
-  { id:208,  subject:"CSEC Ind Tech Elec P2",      room:"Tech Lab",        date:"2026-05-13", time:"Afternoon (1:00 PM)",  candidates:10, center:"Enid Bennett" },
-  { id:209,  subject:"CSEC Biology Gen P2",        room:"Science Lab",     date:"2026-05-14", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
-  { id:210,  subject:"CSEC IT Gen P2",             room:"Computer Lab A",  date:"2026-05-14", time:"Afternoon (1:00 PM)",  candidates:16, center:"Enid Bennett" },
-  { id:211,  subject:"CSEC Integ Sci Gen P2",      room:"Science Lab",     date:"2026-05-15", time:"Morning (9:00 AM)",    candidates:14, center:"Enid Bennett" },
+  { id:207,  subject:"CAPE Logistics U2 P2",       room:"Main Hall",       date:"2026-05-13", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:208,  subject:"CSEC Ind Tech Elec P2",      room:"Main Hall",       date:"2026-05-13", time:"Afternoon (1:00 PM)",  candidates:10, center:"Enid Bennett" },
+  { id:209,  subject:"CSEC Biology Gen P2",        room:"Main Hall",       date:"2026-05-14", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:210,  subject:"CSEC IT Gen P2",             room:"Main Hall",       date:"2026-05-14", time:"Afternoon (1:00 PM)",  candidates:16, center:"Enid Bennett" },
+  { id:211,  subject:"CSEC Integ Sci Gen P2",      room:"Main Hall",       date:"2026-05-15", time:"Morning (9:00 AM)",    candidates:14, center:"Enid Bennett" },
   { id:212,  subject:"CSEC POB Gen P2",            room:"Main Hall",       date:"2026-05-15", time:"Afternoon (1:00 PM)",  candidates:20, center:"Enid Bennett" },
   // WEEK 3
-  { id:301,  subject:"CAPE Acct U1 P2",            room:"Classroom 1",     date:"2026-05-18", time:"Morning (9:00 AM)",    candidates:5,  center:"Enid Bennett" },
+  { id:301,  subject:"CAPE Acct U1 P2",            room:"Main Hall",       date:"2026-05-18", time:"Morning (9:00 AM)",    candidates:5,  center:"Enid Bennett" },
   { id:302,  subject:"CSEC Family/Res Mgt P2",     room:"Main Hall",       date:"2026-05-18", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
-  { id:303,  subject:"CSEC Chem Gen P2",           room:"Science Lab",     date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:8,  center:"Enid Bennett" },
+  { id:303,  subject:"CSEC Chem Gen P2",           room:"Main Hall",       date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:8,  center:"Enid Bennett" },
   { id:304,  subject:"CAPE Dig Media U1 P2",       room:"Computer Lab A",  date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:14, center:"Enid Bennett", notes:"Online" },
-  { id:305,  subject:"CSEC Ind Tech Build P2",     room:"Tech Lab",        date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
-  { id:306,  subject:"CAPE MOB U2 P2",             room:"Classroom 1",     date:"2026-05-19", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
-  { id:307,  subject:"CSEC Ind Tech Mech P2",      room:"Tech Lab",        date:"2026-05-20", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
-  { id:308,  subject:"CAPE Bio U2 P2",             room:"Science Lab",     date:"2026-05-20", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:305,  subject:"CSEC Ind Tech Build P2",     room:"Main Hall",       date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:306,  subject:"CAPE MOB U2 P2",             room:"Main Hall",       date:"2026-05-19", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
+  { id:307,  subject:"CSEC Ind Tech Mech P2",      room:"Main Hall",       date:"2026-05-20", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:308,  subject:"CAPE Bio U2 P2",             room:"Main Hall",       date:"2026-05-20", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
   { id:309,  subject:"CSEC OA Gen P2",             room:"Main Hall",       date:"2026-05-20", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
   { id:310,  subject:"CSEC Spanish Gen P1",        room:"Language Lab",    date:"2026-05-20", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett", notes:"Reading" },
-  { id:311,  subject:"CSEC Food/Nut Tech P2",      room:"Food Lab",        date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:5,  center:"Enid Bennett" },
+  { id:311,  subject:"CSEC Food/Nut Tech P2",      room:"Main Hall",       date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:5,  center:"Enid Bennett" },
   { id:312,  subject:"CSEC Carib History P2",      room:"Main Hall",       date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:9,  center:"Enid Bennett" },
-  { id:313,  subject:"CAPE Food/Nut U2 P1",        room:"Food Lab",        date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
+  { id:313,  subject:"CAPE Food/Nut U2 P1",        room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
   { id:314,  subject:"CSEC POA Gen P1",            room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:7,  center:"Enid Bennett" },
-  { id:315,  subject:"CSEC Physics Gen P2",        room:"Science Lab",     date:"2026-05-22", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
-  { id:316,  subject:"CAPE MOB U1 P2",             room:"Classroom 1",     date:"2026-05-22", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:315,  subject:"CSEC Physics Gen P2",        room:"Main Hall",       date:"2026-05-22", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:316,  subject:"CAPE MOB U1 P2",             room:"Main Hall",       date:"2026-05-22", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
   { id:317,  subject:"CSEC PE Gen P1",             room:"Main Hall",       date:"2026-05-22", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
   // WEEK 4
   { id:401,  subject:"CAPE Entrep U2 P2",          room:"Main Hall",       date:"2026-05-25", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
@@ -1226,65 +1314,65 @@ const BASE_EXAMS = [
   { id:403,  subject:"CAPE Dig Media U2 P1",       room:"Computer Lab A",  date:"2026-05-25", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett", notes:"Online" },
   { id:404,  subject:"CAPE Logistics U2 P1",       room:"Main Hall",       date:"2026-05-25", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
   { id:405,  subject:"CSEC English A Gen P1",      room:"Main Hall",       date:"2026-05-26", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett" },
-  { id:406,  subject:"CAPE Bio U2 P1",             room:"Science Lab",     date:"2026-05-26", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
-  { id:407,  subject:"CSEC Ag Sci SA Gen P1",      room:"Agri Lab",        date:"2026-05-27", time:"Morning (9:00 AM)",    candidates:13, center:"Enid Bennett" },
-  { id:408,  subject:"CAPE Entrep U1 P2",          room:"Classroom 1",     date:"2026-05-27", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:406,  subject:"CAPE Bio U2 P1",             room:"Main Hall",       date:"2026-05-26", time:"Afternoon (1:00 PM)",  candidates:3,  center:"Enid Bennett" },
+  { id:407,  subject:"CSEC Ag Sci SA Gen P1",      room:"Main Hall",       date:"2026-05-27", time:"Morning (9:00 AM)",    candidates:13, center:"Enid Bennett" },
+  { id:408,  subject:"CAPE Entrep U1 P2",          room:"Main Hall",       date:"2026-05-27", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
   { id:409,  subject:"CAPE Dig Media U1 P1",       room:"Computer Lab A",  date:"2026-05-27", time:"Morning (9:00 AM)",    candidates:14, center:"Enid Bennett", notes:"Online" },
   { id:410,  subject:"CSEC Math Gen P1",           room:"Main Hall",       date:"2026-05-28", time:"Morning (9:00 AM)",    candidates:41, center:"Enid Bennett" },
   { id:411,  subject:"CAPE Acct U1 P1",            room:"Main Hall",       date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:5,  center:"Enid Bennett" },
-  { id:412,  subject:"CSEC IT Gen P1",             room:"Computer Lab A",  date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:16, center:"Enid Bennett" },
-  { id:413,  subject:"CSEC Integ Sci Gen P1",      room:"Science Lab",     date:"2026-05-29", time:"Afternoon (1:00 PM)",  candidates:14, center:"Enid Bennett" },
+  { id:412,  subject:"CSEC IT Gen P1",             room:"Main Hall",       date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:16, center:"Enid Bennett" },
+  { id:413,  subject:"CSEC Integ Sci Gen P1",      room:"Main Hall",       date:"2026-05-29", time:"Afternoon (1:00 PM)",  candidates:14, center:"Enid Bennett" },
   // WEEK 5
   { id:501,  subject:"CSEC HSB Gen P1",            room:"Main Hall",       date:"2026-06-01", time:"Morning (9:00 AM)",    candidates:19, center:"Enid Bennett" },
   { id:502,  subject:"CSEC Music Gen P1",          room:"Music Studio",    date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:9,  center:"Enid Bennett" },
-  { id:503,  subject:"CSEC Chem Gen P1",           room:"Science Lab",     date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
+  { id:503,  subject:"CSEC Chem Gen P1",           room:"Main Hall",       date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
   { id:504,  subject:"CSEC EDPM Gen P1",           room:"Computer Lab B",  date:"2026-06-02", time:"Morning (9:00 AM)",    candidates:10, center:"Enid Bennett" },
   { id:505,  subject:"CSEC RE Gen P1",             room:"Main Hall",       date:"2026-06-02", time:"Morning (9:00 AM)",    candidates:1,  center:"Enid Bennett" },
-  { id:506,  subject:"CAPE Soc U1 P1",             room:"Classroom 1",     date:"2026-06-02", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
-  { id:507,  subject:"CAPE Ag Sci U1 P1",          room:"Agri Lab",        date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett" },
-  { id:508,  subject:"CSEC Physics Gen P1",        room:"Science Lab",     date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:7,  center:"Enid Bennett" },
-  { id:509,  subject:"CSEC Theatre Arts P1",       room:"Drama Studio",    date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:9,  center:"Enid Bennett" },
+  { id:506,  subject:"CAPE Soc U1 P1",             room:"Main Hall",       date:"2026-06-02", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
+  { id:507,  subject:"CAPE Ag Sci U1 P1",          room:"Main Hall",       date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett" },
+  { id:508,  subject:"CSEC Physics Gen P1",        room:"Main Hall",       date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:7,  center:"Enid Bennett" },
+  { id:509,  subject:"CSEC Theatre Arts P1",       room:"Main Hall",       date:"2026-06-02", time:"Afternoon (1:00 PM)",  candidates:9,  center:"Enid Bennett" },
   { id:510,  subject:"CSEC Social Studies P1",     room:"Main Hall",       date:"2026-06-03", time:"Morning (9:00 AM)",    candidates:33, center:"Enid Bennett" },
   { id:511,  subject:"CSEC OA Gen P1",             room:"Main Hall",       date:"2026-06-03", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
-  { id:512,  subject:"CSEC Tech Drawing P1",       room:"CAD Lab",         date:"2026-06-04", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
-  { id:513,  subject:"CSEC Food/Nut Tech P1",      room:"Food Lab",        date:"2026-06-04", time:"Afternoon (1:00 PM)",  candidates:5,  center:"Enid Bennett" },
-  { id:514,  subject:"CSEC Biology Gen P1",        room:"Science Lab",     date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:512,  subject:"CSEC Tech Drawing P1",       room:"Main Hall",       date:"2026-06-04", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:513,  subject:"CSEC Food/Nut Tech P1",      room:"Main Hall",       date:"2026-06-04", time:"Afternoon (1:00 PM)",  candidates:5,  center:"Enid Bennett" },
+  { id:514,  subject:"CSEC Biology Gen P1",        room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
   { id:515,  subject:"CSEC POB Gen P1",            room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:20, center:"Enid Bennett" },
   { id:516,  subject:"CAPE Env Sci U1 P1",         room:"Main Hall",       date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:8,  center:"Enid Bennett" },
-  { id:517,  subject:"CSEC English B Gen P1",      room:"Classroom 1",     date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:5,  center:"Enid Bennett" },
+  { id:517,  subject:"CSEC English B Gen P1",      room:"Main Hall",       date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:5,  center:"Enid Bennett" },
   // WEEK 6
   { id:601,  subject:"CAPE Entrep U2 P1",          room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:1,  center:"Enid Bennett" },
-  { id:602,  subject:"CSEC Ind Tech P1 Comb",      room:"Tech Lab",        date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:22, center:"Enid Bennett" },
-  { id:603,  subject:"CSEC Carib History P1",      room:"Classroom 1",     date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:9,  center:"Enid Bennett" },
-  { id:604,  subject:"CAPE MOB U2 P1",             room:"Classroom 1",     date:"2026-06-09", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
+  { id:602,  subject:"CSEC Ind Tech P1 Comb",      room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:22, center:"Enid Bennett" },
+  { id:603,  subject:"CSEC Carib History P1",      room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:9,  center:"Enid Bennett" },
+  { id:604,  subject:"CAPE MOB U2 P1",             room:"Main Hall",       date:"2026-06-09", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
   { id:605,  subject:"C&G NCTVET English",         room:"Reading Room",    date:"2026-06-10", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett", notes:"Reading/Writing" },
-  { id:606,  subject:"CAPE IT U1 P1",              room:"Computer Lab A",  date:"2026-06-10", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
+  { id:606,  subject:"CAPE IT U1 P1",              room:"Main Hall",       date:"2026-06-10", time:"Afternoon (1:00 PM)",  candidates:2,  center:"Enid Bennett" },
   { id:607,  subject:"C&G NCTVET Cust Serv",       room:"Main Hall",       date:"2026-06-11", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett" },
-  { id:608,  subject:"CAPE MOB U1 P1",             room:"Classroom 1",     date:"2026-06-11", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
-  { id:609,  subject:"CAPE Logistics U1 P1",       room:"Classroom 2",     date:"2026-06-11", time:"Afternoon (1:00 PM)",  candidates:7,  center:"Enid Bennett" },
+  { id:608,  subject:"CAPE MOB U1 P1",             room:"Main Hall",       date:"2026-06-11", time:"Morning (9:00 AM)",    candidates:7,  center:"Enid Bennett" },
+  { id:609,  subject:"CAPE Logistics U1 P1",       room:"Main Hall",       date:"2026-06-11", time:"Afternoon (1:00 PM)",  candidates:7,  center:"Enid Bennett" },
   { id:610,  subject:"C&G NCTVET Math",            room:"Main Hall",       date:"2026-06-12", time:"Morning (9:00 AM)",    candidates:30, center:"Enid Bennett" },
-  { id:611,  subject:"CAPE Entrep U1 P1",          room:"Classroom 1",     date:"2026-06-12", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
+  { id:611,  subject:"CAPE Entrep U1 P1",          room:"Main Hall",       date:"2026-06-12", time:"Morning (9:00 AM)",    candidates:6,  center:"Enid Bennett" },
   // WEEK 7
   { id:701,  subject:"CAPE Carib Studies P1",      room:"Main Hall",       date:"2026-06-15", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
   { id:702,  subject:"CAPE Comm Studies P1",       room:"Main Hall",       date:"2026-06-16", time:"Morning (9:00 AM)",    candidates:18, center:"Enid Bennett" },
 
   // --- JP CENTRE (100427) CANDIDATES ---
-  { id:801, subject:"CSEC Chem Gen P3/2",          room:"Main Hall", date:"2026-05-04", time:"Morning (9:00 AM)",   candidates:2,  center:"100427" },
-  { id:802, subject:"CSEC English A Gen P2",       room:"Main Hall", date:"2026-05-05", time:"Morning (9:00 AM)",   candidates:4,  center:"100427" },
-  { id:803, subject:"CSEC Biology Gen P3/2",       room:"Main Hall", date:"2026-05-06", time:"Afternoon (1:00 PM)", candidates:4,  center:"100427" },
-  { id:804, subject:"CSEC POA Gen P2",             room:"Main Hall", date:"2026-05-07", time:"Morning (9:00 AM)",   candidates:1,  center:"100427" },
-  { id:805, subject:"CSEC Math Gen P3/2",          room:"Main Hall", date:"2026-05-07", time:"Afternoon (1:00 PM)", candidates:12, center:"100427" },
-  { id:806, subject:"CSEC HSB Gen P2",             room:"Main Hall", date:"2026-05-11", time:"Afternoon (1:00 PM)", candidates:5,  center:"100427" },
-  { id:807, subject:"CSEC Math Gen P2",            room:"Main Hall", date:"2026-05-12", time:"Morning (9:00 AM)",   candidates:12, center:"100427" },
-  { id:808, subject:"CSEC English B Gen P2",       room:"Main Hall", date:"2026-05-12", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" },
-  { id:809, subject:"CSEC Social Studies Gen P2",  room:"Main Hall", date:"2026-05-13", time:"Morning (9:00 AM)",   candidates:1,  center:"100427" },
-  { id:810, subject:"CSEC Biology Gen P2",         room:"Main Hall", date:"2026-05-14", time:"Morning (9:00 AM)",   candidates:4,  center:"100427" },
-  { id:811, subject:"CSEC IT Gen P2",              room:"Main Hall", date:"2026-05-14", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" },
-  { id:812, subject:"CSEC POB Gen P2",             room:"Main Hall", date:"2026-05-15", time:"Afternoon (1:00 PM)", candidates:5,  center:"100427" },
-  { id:813, subject:"CSEC Geography Gen P2",       room:"Main Hall", date:"2026-05-18", time:"Morning (9:00 AM)",   candidates:1,  center:"100427" },
-  { id:814, subject:"CSEC Chem Gen P2",            room:"Main Hall", date:"2026-05-19", time:"Morning (9:00 AM)",   candidates:2,  center:"100427" },
-  { id:815, subject:"CSEC Carib History P2",       room:"Main Hall", date:"2026-05-21", time:"Morning (9:00 AM)",   candidates:2,  center:"100427" },
-  { id:816, subject:"CSEC POA Gen P1 & P3/2",      room:"Main Hall", date:"2026-05-21", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" }
+  { id:801, subject:"CSEC Chem Gen P3/2",          room:"Science Lab",     date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
+  { id:802, subject:"CSEC English A Gen P2",       room:"Main Hall",       date:"2026-05-05", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
+  { id:803, subject:"CSEC Biology Gen P3/2",       room:"Science Lab",     date:"2026-05-06", time:"Afternoon (1:00 PM)", candidates:4,  center:"100427" },
+  { id:804, subject:"CSEC POA Gen P2",             room:"Main Hall",       date:"2026-05-07", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:805, subject:"CSEC Math Gen P3/2",          room:"Main Hall",       date:"2026-05-07", time:"Afternoon (1:00 PM)", candidates:12, center:"100427" },
+  { id:806, subject:"CSEC HSB Gen P2",             room:"Main Hall",       date:"2026-05-11", time:"Afternoon (1:00 PM)", candidates:5,  center:"100427" },
+  { id:807, subject:"CSEC Math Gen P2",            room:"Main Hall",       date:"2026-05-12", time:"Morning (9:00 AM)",    candidates:12, center:"100427" },
+  { id:808, subject:"CSEC English B Gen P2",       room:"Main Hall",       date:"2026-05-12", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" },
+  { id:809, subject:"CSEC Social Studies Gen P2",  room:"Main Hall",       date:"2026-05-13", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:810, subject:"CSEC Biology Gen P2",         room:"Main Hall",       date:"2026-05-14", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
+  { id:811, subject:"CSEC IT Gen P2",              room:"Main Hall",       date:"2026-05-14", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" },
+  { id:812, subject:"CSEC POB Gen P2",             room:"Main Hall",       date:"2026-05-15", time:"Afternoon (1:00 PM)", candidates:5,  center:"100427" },
+  { id:813, subject:"CSEC Geography Gen P2",       room:"Main Hall",       date:"2026-05-18", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:814, subject:"CSEC Chem Gen P2",            room:"Main Hall",       date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
+  { id:815, subject:"CSEC Carib History P2",       room:"Main Hall",       date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
+  { id:816, subject:"CSEC POA Gen P1 & P3/2",      room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)", candidates:1,  center:"100427" }
 ];
 
 // ═══════════════════════════════════════════════════════
