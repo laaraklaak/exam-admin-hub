@@ -348,9 +348,9 @@ input::placeholder{color:var(--text-3)}
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONSTANTS & COLOUR PALETTE (BUMPED TO V10)
+// v12 (const SK = 'enid_bennett_db_v12';)
 // ═══════════════════════════════════════════════════════
-const SK  = 'enid_bennett_db_v10';
+const SK  = 'enid_bennett_db_v12';
 const STK = 'enid_staff_v10';
 const CAPACITY_LIMIT = 90; // Main Hall Maximum Capacity
 
@@ -1362,7 +1362,7 @@ const BASE_EXAMS = [
   { id:701,  subject:"CAPE Carib Studies P1",      room:"Main Hall",       date:"2026-06-15", time:"Morning (9:00 AM)",    candidates:3,  center:"Enid Bennett" },
   { id:702,  subject:"CAPE Comm Studies P1",       room:"Main Hall",       date:"2026-06-16", time:"Morning (9:00 AM)",    candidates:18, center:"Enid Bennett" },
 
-  // --- JP CENTRE (100427) CANDIDATES ---
+// --- JP CENTRE (100427) CANDIDATES ---
   { id:801, subject:"CSEC Chem Gen P3/2",          room:"Science Lab",     date:"2026-05-04", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
   { id:802, subject:"CSEC English A Gen P2",       room:"Main Hall",       date:"2026-05-05", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
   { id:803, subject:"CSEC Biology Gen P3/2",       room:"Science Lab",     date:"2026-05-06", time:"Afternoon (1:00 PM)",  candidates:4,  center:"100427" },
@@ -1378,21 +1378,20 @@ const BASE_EXAMS = [
   { id:813, subject:"CSEC Geography Gen P2",       room:"Main Hall",       date:"2026-05-18", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
   { id:814, subject:"CSEC Chem Gen P2",            room:"Main Hall",       date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
   { id:815, subject:"CSEC Carib History P2",       room:"Main Hall",       date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
-  { id:816, subject:"CSEC POA Gen P1 & P3/2",      room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427" },
-
-  // --- JP CENTRE (100427) MISSING PAPER 1 EXAMS (GENERATED) ---
+  { id:816, subject:"CSEC POA Gen P1 & P3/2",      room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427", notes:"15m break between papers" },
   { id:817, subject:"CSEC English A Gen P1",       room:"Main Hall",       date:"2026-05-26", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
-  { id:818, subject:"CSEC Math Gen P1",            room:"Main Hall",       date:"2026-05-28", time:"Morning (9:00 AM)",    candidates:12, center:"100427" },
-  { id:819, subject:"CSEC IT Gen P1",              room:"Main Hall",       date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
-  { id:820, subject:"CSEC HSB Gen P1",             room:"Main Hall",       date:"2026-06-01", time:"Morning (9:00 AM)",    candidates:5,  center:"100427" },
-  { id:821, subject:"CSEC Chem Gen P1",            room:"Main Hall",       date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:2,  center:"100427" },
-  { id:822, subject:"CSEC Social Studies P1",      room:"Main Hall",       date:"2026-06-03", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
-  { id:823, subject:"CSEC Biology Gen P1",         room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
-  { id:824, subject:"CSEC POB Gen P1",             room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:5,  center:"100427" },
-  { id:825, subject:"CSEC English B Gen P1",       room:"Main Hall",       date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427" },
-  { id:826, subject:"CSEC Carib History P1",       room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:2,  center:"100427" },
-  { id:827, subject:"CSEC Geography Gen P1",       room:"Main Hall",       date:"2026-06-09", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
-
+  { id:818, subject:"CSEC English A/B Gen P3/2",   room:"Main Hall",       date:"2026-05-27", time:"Afternoon (1:00 PM)",  candidates:4,  center:"100427" },
+  { id:819, subject:"CSEC Math Gen P1",            room:"Main Hall",       date:"2026-05-28", time:"Morning (9:00 AM)",    candidates:12, center:"100427" },
+  { id:820, subject:"CSEC IT Gen P1",              room:"Main Hall",       date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:821, subject:"CSEC HSB Gen P1 & P3",        room:"Main Hall",       date:"2026-06-01", time:"Morning (9:00 AM)",    candidates:5,  center:"100427", notes:"15m break between papers" },
+  { id:822, subject:"CSEC Chem Gen P1",            room:"Main Hall",       date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:2,  center:"100427" },
+  { id:823, subject:"CSEC Social Studies P1 & P3", room:"Main Hall",       date:"2026-06-03", time:"Morning (9:00 AM)",    candidates:1,  center:"100427", notes:"15m break between papers" },
+  { id:824, subject:"CSEC Geography Gen P1 & P3/2",room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:1,  center:"100427", notes:"15m break between papers" },
+  { id:825, subject:"CSEC Biology Gen P1",         room:"Main Hall",       date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:4,  center:"100427" },
+  { id:826, subject:"CSEC English B Gen P1",       room:"Main Hall",       date:"2026-06-08", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:827, subject:"CSEC POB Gen P1 & P3/2",      room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:5,  center:"100427", notes:"15m break between papers" },
+  { id:828, subject:"CSEC Carib History P1 & P3/2",room:"Main Hall",       date:"2026-06-09", time:"Morning (9:00 AM)",    candidates:2,  center:"100427", notes:"15m break between papers" },
+  { id:829, subject:"CSEC IT Gen P3",              room:"Computer Lab A",  date:"2026-06-09", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427" },
   // --- NLT OASIS INSTITUTE CANDIDATES ---
   { id:901, subject:"CSEC English A Gen P2",       room:"Main Hall",       date:"2026-05-05", time:"Morning (9:00 AM)",    candidates:36, center:"NLT Oasis" },
   { id:902, subject:"CSEC POA Gen P2",             room:"Main Hall",       date:"2026-05-07", time:"Morning (9:00 AM)",    candidates:13, center:"NLT Oasis" },
