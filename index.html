@@ -348,9 +348,9 @@ input::placeholder{color:var(--text-3)}
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONSTANTS & COLOUR PALETTE (BUMPED TO V10)
+// v13 (const SK = 'enid_bennett_db_v13';)
 // ═══════════════════════════════════════════════════════
-const SK  = 'enid_bennett_db_v10';
+const SK  = 'enid_bennett_db_v13';
 const STK = 'enid_staff_v10';
 const CAPACITY_LIMIT = 90; // Main Hall Maximum Capacity
 
@@ -870,7 +870,12 @@ function renderStaff() {
 
   roster.forEach(name => {
     const sessions = new Set();
-    d.exams.filter(e => e.assigned?.includes(name)).forEach(e => sessions.add(e.date+'|'+e.time));
+    
+    // UPDATED MATCHING: Case-insensitive and ignores accidental spaces
+    d.exams.filter(e => 
+      (e.assigned || []).some(a => a.trim().toLowerCase() === name.trim().toLowerCase())
+    ).forEach(e => sessions.add(e.date+'|'+e.time));
+    
     const days     = new Set(Array.from(sessions).map(s=>s.split('|')[0])).size;
     const sessCount= sessions.size;
 
@@ -918,12 +923,19 @@ function removeStaff(n) {
 
 function printStaffSchedule(staffName) {
   const d = loadData();
-  const myExams = d.exams.filter(e => e.assigned?.includes(staffName)).sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
+  const myExams = d.exams.filter(e => 
+    (e.assigned || []).some(a => a.trim().toLowerCase() === staffName.trim().toLowerCase())
+  ).sort((a,b) => a.date.localeCompare(b.date) || (timeWeight(a.time) - timeWeight(b.time)));
   
   let html = `<html><head><title>${staffName} - Schedule</title>
   <style>body{font-family:sans-serif;padding:30px;color:#000;max-width:800px;margin:0 auto}
+  @media print { .no-print { display: none; } }
   table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px}
   th,td{border:1px solid #aaa;padding:11px;text-align:left}th{background:#f4f4f4}</style></head><body>
+  <div class="no-print" style="background:#1e2d4a; padding:15px; margin:-30px -30px 20px -30px; text-align:center; color:white;">
+    <button onclick="window.close()" style="padding:10px 20px; font-size:16px; border-radius:8px; border:none; background:#3b82f6; color:white; font-weight:bold; cursor:pointer;">⬅ Back to App / Close View</button>
+    <p style="margin-top:10px; font-size:12px;">If printing didn't start automatically, use your browser's Print option.</p>
+  </div>
   <h2>Invigilation Schedule: ${staffName}</h2>
   <p>Generated: ${fmtDate(todayStr())}</p>
   <table><tr><th>Date</th><th>Session</th><th>Subject</th><th>Room</th></tr>`;
@@ -960,7 +972,7 @@ function renderReports() {
   if (end)            filtered = filtered.filter(e=>e.date<=end);
   if (center!=='all') filtered = filtered.filter(e=>e.center===center);
   if (subj)           filtered = filtered.filter(e=>e.subject.toLowerCase().includes(subj));
-  if (invig!=='all')  filtered = filtered.filter(e=>e.assigned?.includes(invig));
+  if (invig!=='all')  filtered = filtered.filter(e=>(e.assigned||[]).some(a=>a.trim().toLowerCase()===invig.trim().toLowerCase()));
 
   if (!filtered.length) { el.innerHTML = "<p class='empty-state'>No sessions match the filters.</p>"; return; }
 
@@ -1089,8 +1101,13 @@ function printMasterReport() {
   const w = window.open('','_blank');
   w.document.write(`<html><head><title>Master Logistics Report</title>
   <style>body{font-family:sans-serif;padding:30px;color:#000;max-width:800px;margin:0 auto;line-height:1.5}
+  @media print { .no-print { display: none; } }
   .report-section{border-left:4px solid #3b82f6;padding-left:15px;margin-bottom:20px}
   .remarks-box{background:#f4f4f4;padding:12px;border-radius:8px;font-style:italic;font-size:13px;margin-top:8px;border:1px dashed #ccc}</style></head><body>
+  <div class="no-print" style="background:#1e2d4a; padding:15px; margin:-30px -30px 20px -30px; text-align:center; color:white;">
+    <button onclick="window.close()" style="padding:10px 20px; font-size:16px; border-radius:8px; border:none; background:#3b82f6; color:white; font-weight:bold; cursor:pointer;">⬅ Back to App / Close View</button>
+    <p style="margin-top:10px; font-size:12px;">If printing didn't start automatically, use your browser's Print option.</p>
+  </div>
   <h2>Official Logistics Master Report</h2>
   <p style="font-size:13px;color:#666;border-bottom:1px solid #ccc;padding-bottom:15px">Generated: ${fmtDate(todayStr())}</p>
   ${content.replace(/var\(--[^)]+\)/g,'inherit').replace(/var\(--border\)/g,'#ccc')}
@@ -1182,7 +1199,13 @@ function printRecruitmentReport() {
   if (!content || content.includes('fully staffed')) { showToast('No shortages to print', 'warn'); return; }
   const w = window.open('','_blank');
   w.document.write(`<html><head><title>Recruitment Shortages Report</title>
-  <style>body{font-family:sans-serif;padding:30px;color:#000;max-width:800px;margin:0 auto}</style></head><body>
+  <style>body{font-family:sans-serif;padding:30px;color:#000;max-width:800px;margin:0 auto}
+  @media print { .no-print { display: none; } }
+  </style></head><body>
+  <div class="no-print" style="background:#1e2d4a; padding:15px; margin:-30px -30px 20px -30px; text-align:center; color:white;">
+    <button onclick="window.close()" style="padding:10px 20px; font-size:16px; border-radius:8px; border:none; background:#3b82f6; color:white; font-weight:bold; cursor:pointer;">⬅ Back to App / Close View</button>
+    <p style="margin-top:10px; font-size:12px;">If printing didn't start automatically, use your browser's Print option.</p>
+  </div>
   <h2>Action Required: Staffing Shortages</h2>
   <p style="border-bottom:1px solid #ccc;padding-bottom:15px;font-size:13px">Generated: ${fmtDate(todayStr())}</p>
   ${content.replace(/var\(--[^)]+\)/g,'inherit')}
@@ -1238,9 +1261,9 @@ function toggleTheme() {
 function todayStr()  { return new Date().toISOString().split('T')[0]; }
 function fmtDate(ds) { return new Date(ds+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
 
-// NEW COLOR ENGINE: Extracts the base subject name so P1 and P2 of the same subject always share a color!
+// NEW COLOR ENGINE: Isolates the core subject perfectly across centers
 function subjColor(s){
-  let core = s.replace(/\b(P1|P2|P3\/2|Gen|U1|U2|Comb)\b/gi, '').trim().toLowerCase();
+  let core = s.replace(/\b(P1|P2|P3|P3\/2|Gen|U1|U2|Comb|SA|Tech)\b/gi, '').replace(/&/g, '').replace(/\b(csec|cape|c\&g nctvet)\b/gi, '').trim().toLowerCase();
   let h=0; 
   for(let i=0;i<core.length;i++) h=(h*31+core.charCodeAt(i))&0xffff; 
   return COLS[h%COLS.length]; 
@@ -1378,20 +1401,20 @@ const BASE_EXAMS = [
   { id:813, subject:"CSEC Geography Gen P2",       room:"Main Hall",       date:"2026-05-18", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
   { id:814, subject:"CSEC Chem Gen P2",            room:"Main Hall",       date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
   { id:815, subject:"CSEC Carib History P2",       room:"Main Hall",       date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
-  { id:816, subject:"CSEC POA Gen P1 & P3/2",      room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427" },
-
-  // --- JP CENTRE (100427) MISSING PAPER 1 EXAMS (GENERATED) ---
+  { id:816, subject:"CSEC POA Gen P1 & P3/2",      room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427", notes:"15m break between papers" },
   { id:817, subject:"CSEC English A Gen P1",       room:"Main Hall",       date:"2026-05-26", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
-  { id:818, subject:"CSEC Math Gen P1",            room:"Main Hall",       date:"2026-05-28", time:"Morning (9:00 AM)",    candidates:12, center:"100427" },
-  { id:819, subject:"CSEC IT Gen P1",              room:"Main Hall",       date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
-  { id:820, subject:"CSEC HSB Gen P1",             room:"Main Hall",       date:"2026-06-01", time:"Morning (9:00 AM)",    candidates:5,  center:"100427" },
-  { id:821, subject:"CSEC Chem Gen P1",            room:"Main Hall",       date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:2,  center:"100427" },
-  { id:822, subject:"CSEC Social Studies P1",      room:"Main Hall",       date:"2026-06-03", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
-  { id:823, subject:"CSEC Biology Gen P1",         room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
-  { id:824, subject:"CSEC POB Gen P1",             room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:5,  center:"100427" },
-  { id:825, subject:"CSEC English B Gen P1",       room:"Main Hall",       date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427" },
-  { id:826, subject:"CSEC Carib History P1",       room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:2,  center:"100427" },
-  { id:827, subject:"CSEC Geography Gen P1",       room:"Main Hall",       date:"2026-06-09", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:818, subject:"CSEC English A/B Gen P3/2",   room:"Main Hall",       date:"2026-05-27", time:"Afternoon (1:00 PM)",  candidates:4,  center:"100427" },
+  { id:819, subject:"CSEC Math Gen P1",            room:"Main Hall",       date:"2026-05-28", time:"Morning (9:00 AM)",    candidates:12, center:"100427" },
+  { id:820, subject:"CSEC IT Gen P1",              room:"Main Hall",       date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:821, subject:"CSEC HSB Gen P1 & P3",        room:"Main Hall",       date:"2026-06-01", time:"Morning (9:00 AM)",    candidates:5,  center:"100427", notes:"15m break between papers" },
+  { id:822, subject:"CSEC Chem Gen P1",            room:"Main Hall",       date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:2,  center:"100427" },
+  { id:823, subject:"CSEC Social Studies P1 & P3", room:"Main Hall",       date:"2026-06-03", time:"Morning (9:00 AM)",    candidates:1,  center:"100427", notes:"15m break between papers" },
+  { id:824, subject:"CSEC Geography Gen P1 & P3/2",room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:1,  center:"100427", notes:"15m break between papers" },
+  { id:825, subject:"CSEC Biology Gen P1",         room:"Main Hall",       date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:4,  center:"100427" },
+  { id:826, subject:"CSEC English B Gen P1",       room:"Main Hall",       date:"2026-06-08", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:827, subject:"CSEC POB Gen P1 & P3/2",      room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:5,  center:"100427", notes:"15m break between papers" },
+  { id:828, subject:"CSEC Carib History P1 & P3/2",room:"Main Hall",       date:"2026-06-09", time:"Morning (9:00 AM)",    candidates:2,  center:"100427", notes:"15m break between papers" },
+  { id:829, subject:"CSEC IT Gen P3",              room:"Computer Lab A",  date:"2026-06-09", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427" },
 
   // --- NLT OASIS INSTITUTE CANDIDATES ---
   { id:901, subject:"CSEC English A Gen P2",       room:"Main Hall",       date:"2026-05-05", time:"Morning (9:00 AM)",    candidates:36, center:"NLT Oasis" },
@@ -1409,6 +1432,7 @@ const BASE_EXAMS = [
   { id:913, subject:"CSEC Social Studies P1",      room:"Main Hall",       date:"2026-06-03", time:"Morning (9:00 AM)",    candidates:24, center:"NLT Oasis" },
   { id:914, subject:"CSEC POB Gen P1",             room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:15, center:"NLT Oasis" }
 ];
+
 // ═══════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════
