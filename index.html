@@ -202,7 +202,7 @@ input::placeholder{color:var(--text-3)}
         <label>Primary Registration Center</label>
         <select id="f-center" onchange="onCenterChange()" style="font-weight:600">
           <option value="Enid Bennett">🏫 Enid Bennett High (Home)</option>
-          <option value="100658">📍 NLT — Centre 100658</option>
+          <option value="NLT Oasis">📍 NLT Oasis — Centre 100658</option>
           <option value="100427">📍 JP — Centre 100427</option>
         </select>
       </div>
@@ -308,7 +308,7 @@ input::placeholder{color:var(--text-3)}
           <select id="rep-center" onchange="renderReports()">
             <option value="all">All Centers (Pooled at EB)</option>
             <option value="Enid Bennett">Enid Bennett Registered Only</option>
-            <option value="100658">NLT (100658) Registered Only</option>
+            <option value="NLT Oasis">NLT Oasis (100658) Registered Only</option>
             <option value="100427">JP (100427) Registered Only</option>
           </select>
         </div>
@@ -348,10 +348,10 @@ input::placeholder{color:var(--text-3)}
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONSTANTS & COLOUR PALETTE
+//  CONSTANTS & COLOUR PALETTE (BUMPED TO V10)
 // ═══════════════════════════════════════════════════════
-const SK  = 'enid_bennett_db_v7';
-const STK = 'enid_staff_v7';
+const SK  = 'enid_bennett_db_v10';
+const STK = 'enid_staff_v10';
 const CAPACITY_LIMIT = 90; // Main Hall Maximum Capacity
 
 const COLS = [
@@ -363,7 +363,6 @@ const COLS = [
   {mid:'#14b8a6',dark:'#5eead4',bg:'#ccfbf1',dbg:'#0c2420'}
 ];
 
-// UPDATED: Now detects "lab", "p3/2", "practical" to isolate Science Labs from Main Hall!
 const AUX_REGEX = /(digital\s*media|edpm|tech\s*drawing\s*p2|music|visual\s*arts|spanish\s*p1|online|reading|p\s*0?32|paper\s*0?32|p3\/2|lab|practical)/i;
 
 // ═══════════════════════════════════════════════════════
@@ -413,7 +412,7 @@ function saveData(d) {
 
 function cloudPush(d) {
   if (!window.firebaseDB) return;
-  window.firebaseDB.ref('examhub/data_v7').set(d)
+  window.firebaseDB.ref('examhub/data_v10').set(d)
     .then(() => { releaseSyncLock(); updateSyncBadge('synced'); })
     .catch(err => {
       releaseSyncLock();
@@ -426,7 +425,7 @@ function loadStaff() {
 }
 function saveStaff(s) {
   localStorage.setItem(STK, JSON.stringify(s));
-  if (window.firebaseDB) window.firebaseDB.ref('examhub/staff_v7').set(s).catch(()=>{});
+  if (window.firebaseDB) window.firebaseDB.ref('examhub/staff_v10').set(s).catch(()=>{});
 }
 
 function updateSyncBadge(state) {
@@ -525,7 +524,7 @@ function initFirebase() {
     const db = firebase.database();
     window.firebaseDB = db;
 
-    db.ref('examhub/data_v7').on('value', snap => {
+    db.ref('examhub/data_v10').on('value', snap => {
       if (_syncLock) return;
       const val = snap.val();
       if (val && val.exams) {
@@ -538,7 +537,7 @@ function initFirebase() {
       }
     }, err => { updateSyncBadge('error'); });
 
-    db.ref('examhub/staff_v7').on('value', snap => {
+    db.ref('examhub/staff_v10').on('value', snap => {
       if (_syncLock) return;
       const val = snap.val();
       if (Array.isArray(val)) {
@@ -697,7 +696,7 @@ function openGate(date) {
   html += buildSection('Afternoon', pmStats, 'purple-mid');
 
   const eb  = day.filter(e=>e.center==='Enid Bennett').reduce((s,e)=>s+e.candidates,0);
-  const nlt = day.filter(e=>e.center==='100658').reduce((s,e)=>s+e.candidates,0)  + day.reduce((s,e)=>s+(e.ext_nlt||0),0);
+  const nlt = day.filter(e=>e.center==='NLT Oasis' || e.center==='100658').reduce((s,e)=>s+e.candidates,0)  + day.reduce((s,e)=>s+(e.ext_nlt||0),0);
   const jp  = day.filter(e=>e.center==='100427').reduce((s,e)=>s+e.candidates,0)  + day.reduce((s,e)=>s+(e.ext_jp||0),0);
 
   html += `
@@ -829,7 +828,7 @@ function editExam(id) {
 function addExt(id) {
   const d = loadData(), e = d.exams.find(x => x.id === id);
   if (!e) return;
-  const nlt = prompt('NLT (100658) external candidates:', e.ext_nlt||0);  if (nlt===null) return;
+  const nlt = prompt('NLT Oasis external candidates:', e.ext_nlt||0);  if (nlt===null) return;
   const jp  = prompt('JP (100427) external candidates:', e.ext_jp||0);    if (jp===null)  return;
   e.ext_nlt = parseInt(nlt)||0;
   e.ext_jp  = parseInt(jp)||0;
@@ -993,7 +992,7 @@ function renderReports() {
     data.rooms.add(e.room);
     
     if (e.candidates > 0) data.centersAssigned.add("EB");
-    if (e.ext_nlt > 0 || e.center==='100658') data.centersAssigned.add("NLT");
+    if (e.ext_nlt > 0 || e.center==='NLT Oasis' || e.center==='100658') data.centersAssigned.add("NLT");
     if (e.ext_jp > 0 || e.center==='100427') data.centersAssigned.add("JP");
     
     if (e.assigned) e.assigned.forEach(n=>data.staffNames.add(n));
@@ -1198,9 +1197,9 @@ function onCenterChange() {
   const c = document.getElementById('f-center').value;
   const banner = document.getElementById('center-info-banner');
   const info   = document.getElementById('center-info-text');
-  if (c === '100658') {
+  if (c === 'NLT Oasis' || c === '100658') {
     banner.style.display = 'block';
-    info.textContent = 'NLT Centre 100658 — Enter candidate count for exams hosted at this external centre. Use "+Ext" on existing Enid Bennett exams to add NLT external candidates.';
+    info.textContent = 'NLT Oasis Centre — Enter candidate count for exams hosted at this external centre. Use "+Ext" on existing Enid Bennett exams to add NLT external candidates.';
   } else if (c === '100427') {
     banner.style.display = 'block';
     info.textContent = 'JP Centre 100427 — Enter candidate count for exams hosted at this external centre. Use "+Ext" on existing exams to add JP external candidates.';
@@ -1238,10 +1237,17 @@ function toggleTheme() {
 }
 function todayStr()  { return new Date().toISOString().split('T')[0]; }
 function fmtDate(ds) { return new Date(ds+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
-function subjColor(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))&0xffff; return COLS[h%COLS.length]; }
+
+// NEW COLOR ENGINE: Extracts the base subject name so P1 and P2 of the same subject always share a color!
+function subjColor(s){
+  let core = s.replace(/\b(P1|P2|P3\/2|Gen|U1|U2|Comb)\b/gi, '').trim().toLowerCase();
+  let h=0; 
+  for(let i=0;i<core.length;i++) h=(h*31+core.charCodeAt(i))&0xffff; 
+  return COLS[h%COLS.length]; 
+}
 
 function centerBadgeHTML(c) {
-  if (c==='100658') return `<span class="center-badge center-nlt">NLT</span>`;
+  if (c==='NLT Oasis' || c==='100658') return `<span class="center-badge center-nlt">NLT</span>`;
   if (c==='100427') return `<span class="center-badge center-jp">JP</span>`;
   return `<span class="center-badge center-eb">EB</span>`;
 }
@@ -1373,6 +1379,19 @@ const BASE_EXAMS = [
   { id:814, subject:"CSEC Chem Gen P2",            room:"Main Hall",       date:"2026-05-19", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
   { id:815, subject:"CSEC Carib History P2",       room:"Main Hall",       date:"2026-05-21", time:"Morning (9:00 AM)",    candidates:2,  center:"100427" },
   { id:816, subject:"CSEC POA Gen P1 & P3/2",      room:"Main Hall",       date:"2026-05-21", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427" },
+
+  // --- JP CENTRE (100427) MISSING PAPER 1 EXAMS (GENERATED) ---
+  { id:817, subject:"CSEC English A Gen P1",       room:"Main Hall",       date:"2026-05-26", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
+  { id:818, subject:"CSEC Math Gen P1",            room:"Main Hall",       date:"2026-05-28", time:"Morning (9:00 AM)",    candidates:12, center:"100427" },
+  { id:819, subject:"CSEC IT Gen P1",              room:"Main Hall",       date:"2026-05-29", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:820, subject:"CSEC HSB Gen P1",             room:"Main Hall",       date:"2026-06-01", time:"Morning (9:00 AM)",    candidates:5,  center:"100427" },
+  { id:821, subject:"CSEC Chem Gen P1",            room:"Main Hall",       date:"2026-06-01", time:"Afternoon (1:00 PM)",  candidates:2,  center:"100427" },
+  { id:822, subject:"CSEC Social Studies P1",      room:"Main Hall",       date:"2026-06-03", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
+  { id:823, subject:"CSEC Biology Gen P1",         room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:4,  center:"100427" },
+  { id:824, subject:"CSEC POB Gen P1",             room:"Main Hall",       date:"2026-06-05", time:"Morning (9:00 AM)",    candidates:5,  center:"100427" },
+  { id:825, subject:"CSEC English B Gen P1",       room:"Main Hall",       date:"2026-06-05", time:"Afternoon (1:00 PM)",  candidates:1,  center:"100427" },
+  { id:826, subject:"CSEC Carib History P1",       room:"Main Hall",       date:"2026-06-08", time:"Afternoon (1:00 PM)",  candidates:2,  center:"100427" },
+  { id:827, subject:"CSEC Geography Gen P1",       room:"Main Hall",       date:"2026-06-09", time:"Morning (9:00 AM)",    candidates:1,  center:"100427" },
 
   // --- NLT OASIS INSTITUTE CANDIDATES ---
   { id:901, subject:"CSEC English A Gen P2",       room:"Main Hall",       date:"2026-05-05", time:"Morning (9:00 AM)",    candidates:36, center:"NLT Oasis" },
